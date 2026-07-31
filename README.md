@@ -88,3 +88,39 @@ Phases 1 & 2 complete — 12 skills.
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
 - ✅ `sap-backup-recovery` — backup types + recovery types (most-recent / PITR / specific), log-mode
   prerequisites, and per-DB restore/recover commands (HANA/Oracle/ASE/Db2/MaxDB/SQL Server).
+
+## Install (Claude Code plugin)
+
+This repo is a Claude Code plugin marketplace. Add it to `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "sap-basis-ops": { "source": { "source": "github", "repo": "adam0thman/sap-basis-ops" } }
+  },
+  "enabledPlugins": { "sap-basis-ops@sap-basis-ops": true }
+}
+```
+
+then run `/reload-plugins` in Claude Code (or use the interactive `/plugin` menu). The skills load
+namespaced as `/sap-basis-ops:<skill-name>` (e.g. `/sap-basis-ops:sap-system-lifecycle`), and also
+trigger automatically when a task matches a skill's description.
+
+## Contributing
+
+**Contributions are welcome — anyone can contribute.** Open a pull request and we'll review it.
+
+To keep the project consistent, please follow the conventions used throughout:
+
+- **Cite every command** to help.sap.com or an official SAP guide/Note, with the `[V]` (verified against
+  the live page) vs `[G]` (cited to a guide) markers.
+- **Cover Linux / Windows / AIX** — and state honestly where a platform is N/A (e.g. HANA is Linux-only,
+  SQL Server is Windows-only) rather than inventing variants.
+- Keep the **Identify → Preview → Confirm → Verify** guardrails, and flag destructive commands.
+- Small, focused skills; cross-link rather than duplicate.
+
+Prefer not to use GitHub, or want to reach the maintainer directly? Email **repo@adamoneservices.com**.
+
+## License
+
+[MIT](LICENSE).
