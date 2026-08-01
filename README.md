@@ -22,12 +22,20 @@ that changes state, a skill must:
 1. **Identify** — confirm SID, hostname, instance number, DB type and OS. Never assume.
 2. **Classify** — determine PRD vs non-PRD. Any stop / delete / import against **PRD** requires
    an explicit, typed confirmation from the user.
-3. **Preview** — show the exact command and its **blast radius** first. Several SAP/DB stop
+3. **Run as the correct OS user** — `<sid>adm` for the SAP layer, and the DB's own owner for the DB
+   layer (`ora<dbsid>`, `syb<dbsid>`, `db2<dbsid>`, `sdb`, the HANA SID's `<sid>adm`); `root` **only**
+   where a procedure explicitly requires it. Switch with a login shell (`su - <user>`) so the
+   environment is set, and state the user alongside every command. Wrong-user execution is a top cause
+   of failure, and root-owned files under `/usr/sap` break later starts by the real owner.
+4. **Preview** — show the exact command and its **blast radius** first. Several SAP/DB stop
    commands have *no* dry-run flag (`stopsap`, `shutdown`), so preview is mandatory, not optional.
-4. **Execute** — only via the user-provided MCP, **one step at a time**, never chained across a
+5. **Execute** — only via the user-provided MCP, **one step at a time**, never chained across a
    stop boundary.
-5. **Verify** — run the documented post-check (`GetProcessList`, return codes, `showserver`, …)
+6. **Verify** — run the documented post-check (`GetProcessList`, return codes, `showserver`, …)
    after each step.
+
+Each skill carries the full **"Run as the correct OS user"** matrix (SAP, HANA, Oracle, ASE, Db2, MaxDB,
+SQL Server, Host Agent — UNIX and Windows) so it applies even when a skill is loaded on its own.
 
 ## Sourcing rule (every generated command)
 
