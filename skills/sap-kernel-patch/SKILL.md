@@ -121,6 +121,23 @@ stack / upgrade / DB migration.
 - **Verify / troubleshoot after patch:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **Kernel directory & `sapcpe` layout + SAR file map:** [references/kernel-layout.md](references/kernel-layout.md).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[KP1]** SAP kernel structure (`SAPEXE.SAR` DB-independent + `SAPEXEDB.SAR` DB-dependent), `SAPCAR -xvf …
@@ -136,5 +153,5 @@ stack / upgrade / DB migration.
 - **[SUM]** *Software Update Manager (SUM)* and *SPAM/SAINT* — SAP Software Logistics documentation
   (help.sap.com).
 
-**To confirm/deepen** (once the SAP Notes session can read content): SAP Note 19466 for the current download
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): SAP Note 19466 for the current download
 paths, the kernel release note for your target patch level, and SAP Note 1031096 for Host Agent specifics.

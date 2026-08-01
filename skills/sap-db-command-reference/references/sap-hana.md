@@ -189,5 +189,5 @@ server is Linux-only.) [G]
   IBM Power). Authoritative platform source alongside the SAP HANA PAM. https://me.sap.com/notes/2235581 [G]
 - **[H5]** *hdbsql* / *hdbuserstore* — SAP HANA Client / SQL Reference. Connect syntax and secure store. [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): pull SAP Note 2235581 for the exact
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): pull SAP Note 2235581 for the exact
 OS/revision matrix, and the SAP HANA Administration Guide revision matching your installed HANA 2.0 SPS.

@@ -220,20 +220,14 @@ rather than raw `dump`; use raw dumps for ad-hoc/pre-change safety copies. [G]
 
 ### Related SAP Notes
 
-Cross-referenced from the verified SAPControl page [S1]; both Note IDs were **validated as existing
-via the SAP Notes MCP** (located with canonical URLs). Their purpose is quoted from [S1]; open the
-Notes in your authenticated me.sap.com session for the full current wording:
+Cross-referenced from the verified SAPControl page [S1]; their purpose is quoted from [S1]:
 
 - **SAP Note 1763593** — `startsap`/`stopsap` are deprecated; use SAPControl / SAP MMC instead.
   https://me.sap.com/notes/1763593
 - **SAP Note 809477** — Central Note on starting/stopping SAP systems.
   https://me.sap.com/notes/809477
 
-**To confirm/deepen:** the `SYB:` note series (component **BC-DB-SYB**) is the authoritative source
-for SAP-on-ASE operations — check it for release-specific `startdb`/`stopdb` behaviour and the current
-SAP ASE Administration Guide for your S/4 release.
-
-> Sourcing note: the local SAP Notes MCP can validate that a Note ID exists but cannot extract Note
-> body text in this environment (headless content extraction fails; topic search returns
-> `SESSION_EXPIRED`). Primary sourcing for this file is therefore the help.sap.com Operations/Utility
-> Guides listed below, which are readable and were verified directly.
+**To confirm/deepen** — with the SAP Notes MCP, `fetch` the two Notes above for their current wording,
+and `search` the `SYB:` note series (component **BC-DB-SYB**) — the authoritative source for SAP-on-ASE
+operations — for release-specific `startdb`/`stopdb` behaviour, plus the SAP ASE Administration Guide
+for your S/4 release.

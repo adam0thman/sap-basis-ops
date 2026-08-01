@@ -148,6 +148,6 @@ Manager / Windows Services so they start on boot; the SAP layer is brought up by
 - **[S4]** `net start`/`net stop`, `sqlcmd`, `BACKUP DATABASE`/`BACKUP LOG` — Microsoft SQL Server
   documentation (native, as used under SAP). [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): the central SAP-on-SQL-Server notes
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the central SAP-on-SQL-Server notes
 (component **BC-DB-MSS**) for your SQL Server version, and your instance name (default `MSSQLSERVER` vs a
 named `MSSQL$<INSTANCE>`).

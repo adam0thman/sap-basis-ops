@@ -148,6 +148,23 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
 - **Full read-only SAPControl diagnostic catalog + `service/protectedwebmethods` detail:**
   [references/diagnostics-catalog.md](references/diagnostics-catalog.md).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[T1]** *Log and Trace Information for System Start and Stop* — SAP S/4HANA Technical Operation
@@ -164,5 +181,5 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
 - **[T5]** *How to use the SAPControl Web Service Interface* — SAP NetWeaver Server Infrastructure
   (function reference: `GetAlertTree`, `ReadLogFile`, `GetQueueStatistic`, `EnqGetStatistic`, …). [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): SAP Note 1439348 for the exact
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): SAP Note 1439348 for the exact
 `service/protectedwebmethods` default list and syntax, and KBA 2733511 for `sappfpar check` behaviour.

@@ -146,5 +146,5 @@ db2diag -H 1d                                 # last day of the diagnostic log (
 - **[D4]** `db2start` / `db2stop [force]` / `db2 force applications all` / `db2 backup` / `db2 activate` —
   IBM Db2 for LUW Command Reference (native, as used under SAP). [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): the central SAP-on-Db2 notes
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the central SAP-on-Db2 notes
 (component **BC-DB-DB6**) for your Db2 release, and the exact service name / `SVCENAME` for your install.

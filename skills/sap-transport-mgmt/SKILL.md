@@ -138,6 +138,23 @@ In the system, re-schedule via **STMS → Import Overview** / report `RDDNEWPP` 
 - **DB reachable? (`R3trans -d`) / won't-start triage:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **Restart after kernel/transport-tool changes:** [sap-system-lifecycle](../sap-system-lifecycle/SKILL.md).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[X1]** *tp Options* — SAP Change and Transport System. **[V]** `tp import <request> <SID>` (example
@@ -150,5 +167,5 @@ In the system, re-schedule via **STMS → Import Overview** / report `RDDNEWPP` 
 - **[X4]** tp/import **return codes** (0/4/8/12/16) — SAP Change and Transport System documentation.
 - **[X5]** `R3trans` (`-d` connect test, control files) — SAP R3trans documentation.
 
-**To confirm/deepen** (once the SAP Notes session can read content): the central CTS notes (component
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the central CTS notes (component
 **BC-CTS-TLS**) for your release, and the *tp / R3trans* reference for the full option list.

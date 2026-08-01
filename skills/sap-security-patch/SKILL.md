@@ -121,6 +121,23 @@ Software Center.
 - **Post-patch health / new dumps:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **SAP Notes MCP** (retrieval): see the plugin's SAP Notes MCP notes (content path fix pending).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[P1]** *SAP Security Patch Day* — SAP Support Portal (2nd Tuesday monthly; the **SAP Security Notes**
@@ -134,5 +151,5 @@ Software Center.
 - **[P5]** **SNOTE** (Note Assistant) + **`RSECNOTE`** — implement/track security notes on the system.
   help.sap.com (Note Assistant).
 
-**To confirm/deepen** (once the SAP Notes session can read content): the current SAP Security Notes FAQ
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the current SAP Security Notes FAQ
 note and the System Recommendations setup guide for your Solution Manager / Focused Run release.

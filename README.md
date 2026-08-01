@@ -41,6 +41,39 @@ Nothing ships unverified. Each command/procedure carries a citation, priority or
 Each reference file ends with a **Sources** section listing the pages actually used, and marks
 which commands were verified against the live page vs. cited to a guide.
 
+## Recommended companion: the SAP Notes MCP
+
+Documentation goes stale; **SAP Notes are the living source of truth** — they change procedures between
+doc revisions and are release/patch/DB/OS specific. Every skill therefore carries a **"Staying current"**
+section instructing it to check SAP Notes *before* acting on anything version-specific (and especially
+before anything destructive).
+
+To make that check possible, install the SAP Notes MCP server — [`marianfoo/sap-mcp-servers`](https://github.com/marianfoo/sap-mcp-servers),
+package `packages/notes`. It needs an SAP S-user:
+
+```bash
+git clone https://github.com/marianfoo/sap-mcp-servers ~/sap-mcp-servers
+cd ~/sap-mcp-servers && npm install && npm run build && npm run install:browsers
+```
+```bash
+claude mcp add sap-notes -s user -- bash -lc 'cd ~/sap-mcp-servers/packages/notes && exec node dist/mcp-server.js'
+```
+
+Credentials go in a gitignored `packages/notes/.env`:
+
+```bash
+SAP_USERNAME="S00XXXXXXXX"
+SAP_PASSWORD="your-password"
+```
+
+> ⚠️ **Quote any value containing `#`** — dotenv treats it as an inline comment, so an unquoted
+> `SAP_PASSWORD=My#Pass` silently becomes `My`. This presents as a login that hangs waiting for a
+> redirect, and is easily mistaken for an MFA problem.
+
+The skills then use its two tools — `search` (find Notes by topic) and `fetch` (full Note text, validity,
+prerequisites, side effects). **The MCP is optional**: without it the skills still work from their cited
+help.sap.com sources, but they will say the currency check was skipped rather than assume they are current.
+
 ## Layout
 
 ```

@@ -150,6 +150,6 @@ into memory (warm-up). Treat start/stop with the same guardrails as above. [G, M
 - **[M4]** `dbmcli`, `x_server`, XUSER, OS users (`sdb`, DBM operator) and liveCache (LC10 + same engine)
   — SAP MaxDB / liveCache documentation. [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): the central SAP MaxDB notes
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the central SAP MaxDB notes
 (component **BC-DB-SDB**) for your version, and the exact DBM user name your install uses (`CONTROL`
 vs `SUPERDBA`) plus the X_Server port if changed from 7200.

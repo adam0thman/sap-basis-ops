@@ -185,6 +185,6 @@ SELECT tablespace_name, status FROM dba_tablespaces;
 - **[O5]** Environment (`ORACLE_HOME`, `ORACLE_SID`, `SAPDATA_HOME`) and config (`init<ORACLE_SID>.sap`) —
   SAP Database Administration: Oracle. [G]
 
-**To confirm/deepen** (once the SAP Notes session can read content): the central SAP-on-Oracle notes
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the central SAP-on-Oracle notes
 (component **BC-DB-ORA**) for your Oracle release (e.g. 19c) and the matching BR\*Tools patch level, plus
 the current *SAP Database Guide: Oracle* for exact `brbackup`/`brspace` options.

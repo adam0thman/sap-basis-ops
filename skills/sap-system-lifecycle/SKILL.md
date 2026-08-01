@@ -147,6 +147,23 @@ SAP system is up. If `sapcontrol` can't reach an instance, check `sapstartsrv` /
 - **Full `sapcontrol` function catalog, instance-type glossary, and per-OS boot wiring**
   (systemd / `/etc/inittab` sapinit / Windows services): [references/sapcontrol-and-order.md](references/sapcontrol-and-order.md).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[L1]** *Starting and Stopping SAP Systems Using SAPControl* — SAP NetWeaver 7.5 / ABAP Platform. **[V]**
@@ -163,5 +180,5 @@ SAP system is up. If `sapcontrol` can't reach an instance, check `sapstartsrv` /
 - **[L5]** *Starting and Stopping SAP System Instances Using Commands* — SAP Help Portal (`RestartSystem`,
   `StopSystem` scope). https://help.sap.com/docs/PRODUCT_ID/00b4e4853ef3494da20ebcaceb181d5e/0a2f54809e064ee68b02fb9fb392bafd.html
 
-**To confirm/deepen** (once the SAP Notes session can read content): SAP Note 897933 for the exact
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): SAP Note 897933 for the exact
 priority table of your release, and SAP Note 1763593 for the `startsap`/`stopsap` deprecation details.

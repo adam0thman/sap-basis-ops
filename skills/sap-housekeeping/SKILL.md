@@ -118,6 +118,23 @@ it doesn't refill. Cross-ref [sap-health-triage](../sap-health-triage/SKILL.md) 
 - **What's filling it / is it healthy:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **Full standard-jobs list + OS file-type map:** [references/cleanup-catalog.md](references/cleanup-catalog.md).
 
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
 ## Sources
 
 - **[K1]** **SAP Note 16083** — *Standard jobs, reorganization jobs* (the canonical list: `RSBTCDEL2`,
@@ -131,5 +148,5 @@ it doesn't refill. Cross-ref [sap-health-triage](../sap-health-triage/SKILL.md) 
 - **[K5]** *Housekeeping for SAP HANA Platform* (DB-side, for `dbms_type = hdb`).
   https://help.sap.com/doc/f3dd8d9fb4ab407eb15ee4bf336ae42b/9.3/en-US/Housekeeping%20for%20SAP%20HANA.pdf
 
-**To confirm/deepen** (once the SAP Notes session can read content): SAP Note 16083 for the full current
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): SAP Note 16083 for the full current
 job list + report variants, and Note 48400 for the TemSe/spool consistency procedure.
