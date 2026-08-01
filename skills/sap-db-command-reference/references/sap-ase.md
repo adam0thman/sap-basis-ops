@@ -82,6 +82,15 @@ startdb                              # starts the DB for this SID (calls ASE + B
 ```
 `startdb`/`stopdb` are the SAP wrapper scripts in the `<sid>adm` home. [G, S5]
 
+> ⚠️ **After a kernel patch, `startdb` can fail on UNIX/Linux.** `startdb` runs as `<sid>adm` but the
+> database must be started as **`syb<sid>`**, so `sybctrl` performs a user switch — which needs either the
+> **SUID bit** on `sybctrl` (reset when kernel executables are replaced) or the `syb<sid>` password in
+> **secure storage** (stored automatically by SWPM 1.0 SP01+; `sybctrl` prompts once and saves it
+> otherwise; requires kernel **PL 327 for 7.20**). Note the limitation: if `startdb` is invoked from a
+> **daemon** (e.g. from the start profile), the switch **still requires the SUID bit**.
+> — **SAP Note 1796535** (see also 1796540 for changing passwords via `sybctrl`).
+> Cross-ref [sap-kernel-patch](../../sap-kernel-patch/SKILL.md). [V, S7]
+
 **Windows:** use the **SAP MMC** / **SAP Management Console** (start the DB node), or `sapcontrol`
 (§2c). ASE itself runs as a **Windows service** (below).
 
@@ -217,6 +226,11 @@ rather than raw `dump`; use raw dumps for ad-hoc/pre-change safety copies. [G]
 - **[S6]** *Start and Stop Servers* (Windows startup parameters in the Registry) — SAP ASE
   Configuration Guide.
   https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc38421.1600/doc/html/san1335472535811.html
+- **[S7]** **SAP Note 1796535** — *SYB: Start and stop database without SUID bit for sybctrl*
+  (BC-DB-SYB). **[V]** Retrieved via the SAP Notes MCP: *"After changing the kernel executables, it is
+  required to set the SUID bit for sybctrl. Otherwise the startdb command will not work correctly. This
+  applies to UNIX/Linux only."* / *"A user switch to the operating system user syb&lt;sid&gt; is required on
+  Linux and UNIX platforms."* https://me.sap.com/notes/1796535
 
 ### Related SAP Notes
 

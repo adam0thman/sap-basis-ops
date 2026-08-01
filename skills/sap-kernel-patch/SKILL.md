@@ -62,6 +62,11 @@ and **`SAPEXEDB.SAR`** (DB-dependent, matched to your `dbms_type`). [G, KP1]
    ```
 6. **UNIX only — fix ownership/permissions:** run `saproot.sh <SID>` from the exe dir (restores
    root-owned/setuid binaries). Windows: the service/installer handles this. [G, KP1]
+   > ⚠️ **SAP on ASE:** replacing the kernel resets the **SUID bit on `sybctrl`**, and without it
+   > `startdb` cannot switch to `syb<sid>` — so the database fails to start *after* an otherwise clean
+   > patch. Either restore the SUID bit, or have the `syb<sid>` password in secure storage (kernel
+   > **PL 327 for 7.20**+); note a `startdb` invoked from a **daemon**/start profile still needs the SUID
+   > bit. **SAP Note 1796535** — see [sap-db-command-reference → ASE](../sap-db-command-reference/references/sap-ase.md). [V, KP4]
 7. **Start:** `sapcontrol -nr <nr> -function StartSystem` — `sapcpe` refreshes each instance's local exe.
 8. **Verify:** `disp+work -version` shows the new patch level; `GetProcessList` GREEN; scan `dev_disp`
    ([sap-health-triage](../sap-health-triage/SKILL.md)).
@@ -181,6 +186,9 @@ assuming this file is current.
 - **[HA2]** *Manually Upgrading SAP Host Agent on UNIX / Windows* — SAP Help Portal (stop → SAPCAR extract →
   `saphostexec -install`).
 - **[HA3]** **SAP Note 1031096** — *Installing / upgrading Package SAPHOSTAGENT*. https://me.sap.com/notes/1031096
+- **[KP4]** **SAP Note 1796535** — *SYB: Start and stop database without SUID bit for sybctrl*. **[V]**
+  *"After changing the kernel executables, it is required to set the SUID bit for sybctrl. Otherwise the
+  startdb command will not work correctly."* https://me.sap.com/notes/1796535
 - **[SUM]** *Software Update Manager (SUM)* and *SPAM/SAINT* — SAP Software Logistics documentation
   (help.sap.com).
 
