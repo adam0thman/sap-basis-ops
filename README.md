@@ -91,6 +91,7 @@ sap-basis-ops/
     ├── sap-db-command-reference/     # DB matrix: HANA, Oracle, ASE, Db2, MaxDB, SQL Server
     ├── sap-system-lifecycle/         # start / stop / restart, instance order, sapcontrol
     ├── sap-health-triage/            # is-it-up + first-response triage (+ sappfpar)
+    ├── sap-troubleshooting/          # method + rules of thumb; enumerate ALL log sources
     ├── sap-log-reference/            # log/trace locator: symptom→log, per component & per DB
     ├── sap-housekeeping/             # reorg jobs, work-dir/audit/spool cleanup, cleanipc
     ├── sap-transport-mgmt/           # OS-layer tp / R3trans, buffer, unconditional modes
@@ -107,7 +108,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 12 skills.
+Phases 1 & 2 complete — 13 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -119,6 +120,9 @@ Phases 1 & 2 complete — 12 skills.
 - ✅ `sap-security-patch` — monthly Security Patch Day: retrieve the month's Security Notes, narrow to the
   system's applicable subset, compare vs applied (System Recommendations / Focused Run / RSECNOTE),
   prioritize by CVSS/HotNews, implement via SNOTE.
+- ✅ `sap-troubleshooting` — troubleshooting method: establish facts, **enumerate every log/trace source**
+  (complete inventory: ABAP transactions, security/SAL, interfaces, Java, kernel, DB, OS), correlate by
+  timestamp, rules of thumb, and what to send SAP when escalating.
 - ✅ `sap-log-reference` — log/trace locator: symptom→log, instance work-dir traces, ABAP logs, standalone
   components (Web Disp/SAProuter/Cloud Connector/Host Agent), and each DB's logs; how to read (OS + SAPControl).
 - ✅ `sap-web-dispatcher`, `sap-saprouter`, `sap-cloud-connector` — the standalone components: start/stop/status,

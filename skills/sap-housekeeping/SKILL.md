@@ -76,11 +76,14 @@ Reset traces cleanly from the app rather than deleting the active file: **SM50**
 
 ## 4. Security audit log  ⚠️ retention/compliance
 
-Audit log files (`*.AUD`) under `/usr/sap/<SID>/<INST><nr>/log/` (SM19/RSAU config, SM20 view). Delete
-via **SM18** (or a scheduled reorg), **not** blind `rm`: [G, K3]
+Audit data is held either as files (`*.AUD` under the `DIR_AUDIT`/`FN_AUDIT` path, typically
+`/usr/sap/<SID>/<INST><nr>/log/`) **or in the database**. Delete via the SAL tools, **not** blind `rm`: [G, K3]
 ```
-SM18 → reorganize/delete audit logs older than <retention>
+RSAU_ADMIN  → reorganize / archive the audit log (current, SAP_BASIS 7.50 SP03+)
+SM18        → legacy equivalent on older releases
 ```
+Configuration is `RSAU_CONFIG` (legacy SM19); reading is `RSAU_READ_LOG` (legacy SM20). SAP's own
+retention/management recommendations are in **SAP Note 3500099**; file→database storage in **3667538**. [K6]
 > **Confirm the retention requirement with security/audit/compliance before deleting audit logs.** These
 > are frequently required to be kept for a mandated period. This is the one cleanup that can create a
 > compliance incident.
@@ -172,8 +175,12 @@ assuming this file is current.
   `RSPO1041`, `RSSNAPDL`, `RSBDCREO`, `RSBPSTDE`, `RSM13002`, `RSCOLL00`, …). https://me.sap.com/notes/16083
 - **[K2]** `RSPO1041`/`RSPO1043` spool + TemSe consistency — **SAP Notes 130978** (RSPO1041) and **48400**
   (TemSe/spool consistency). https://me.sap.com/notes/48400
-- **[K3]** Security audit log housekeeping via **SM18** + retention — SAP Security Audit Log documentation
-  (help.sap.com) and SM18/SM19/SM20.
+- **[K3]** Security Audit Log housekeeping — SAP Security Audit Log documentation (help.sap.com);
+  `RSAU_ADMIN`/`RSAU_CONFIG`/`RSAU_READ_LOG` (legacy SM18/SM19/SM20).
+- **[K6]** **SAP Note 2191612** — *FAQ | Use of Security Audit Log as of SAP NetWeaver 7.50*. **[V]**
+  Current transactions as of SAP_BASIS 7.50 SP03, `DIR_AUDIT`/`FN_AUDIT`, log-table reorganize/archive in
+  `RSAU_ADMIN`. Related: **3500099** (managing log data / retention), **3667538** (file → database).
+  https://me.sap.com/notes/2191612
 - **[K4]** Work-directory / `*.OLD` / core files / `cleanipc` — SAP OS-file housekeeping (help.sap.com +
   SAP Basis operations).
 - **[K5]** *Housekeeping for SAP HANA Platform* (DB-side, for `dbms_type = hdb`).

@@ -73,7 +73,7 @@ sapcontrol -nr <nr> -function ABAPReadSyslog               # SM21 system log
 | **ST11** | error-log files / developer traces | the `dev_*` files above |
 | **SM13** | update-request errors | `dev_w*` (update WP) |
 | **SMGW** | gateway monitor + logging | `dev_rd` |
-| **SM19 / SM20 / RSAU** | security audit log (`*.AUD`) | `…/<INST>/log/*.AUD` |
+| **RSAU_CONFIG / RSAU_READ_LOG / RSAU_ADMIN** | Security Audit Log (SAL) — config / read / admin. **Current as of SAP_BASIS 7.50 SP03**; SM19/SM20/SM18 are legacy (SM19 may be display-only) | files per `DIR_AUDIT`/`FN_AUDIT` (`…/<INST>/log/*.AUD`) **or the database** [G6] |
 
 ---
 
@@ -192,6 +192,12 @@ assuming this file is current.
   documentation (help.sap.com).
 - **[G5]** **SAP KBA 3570238** — *How to collect SAPRouter level 2 trace and enable logging*.
   https://me.sap.com/notes/3570238
+- **[G6]** **SAP Note 2191612** — *FAQ | Use of Security Audit Log as of SAP NetWeaver 7.50*. **[V]**
+  `RSAU_CONFIG`/`RSAU_READ_LOG`/`RSAU_ADMIN` as of SAP_BASIS 7.50 SP03; `DIR_AUDIT`/`FN_AUDIT`; SAL can
+  be stored in the database (Note 3667538). https://me.sap.com/notes/2191612
+
+**Complete inventory of every log/trace source, by layer:**
+[references/complete-log-inventory.md](references/complete-log-inventory.md).
 
 **To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): KBA 3570238 for the exact SAProuter
 trace flags, and each DB's admin/troubleshooting guide for the current log paths on your release.
