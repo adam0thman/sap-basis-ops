@@ -121,6 +121,70 @@ Software Center.
 - **Post-patch health / new dumps:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **SAP Notes MCP** (retrieval): see the plugin's SAP Notes MCP notes (content path fix pending).
 
+## Execution discipline (non-negotiable)
+
+### The holy rule — nothing runs unbacked
+
+**Every command executed must be traceable to one of exactly three things:**
+
+1. an **official SAP source** — help.sap.com page / Operations or Administration Guide, or
+2. an **SAP Note / KBA**, or
+3. an **explicit instruction from the user**.
+
+If a command is backed by none of those, **do not run it** — say what backing is missing and stop.
+"It's probably fine", "this is standard", and "I recall the syntax" are not backing. When the backing is
+a source, name it (page or Note number) alongside the command; when it is the user, quote the instruction.
+
+### Ambiguity ⇒ stop and confirm, before any execution
+
+If executing would require **assuming** anything the user did not state, you are **obliged** to confirm
+first. Never fill a gap with a plausible default. Common gaps that force a stop:
+
+- **client number**, SID, instance number, target host/node
+- **read-only vs state-changing** — if it is not explicit which was wanted, ask
+- **scope** — one instance vs the whole system, one tenant vs all, one client vs cross-client
+- which **database / dbms_type**, which environment (**PRD vs non-PRD**)
+- retention/age cut-offs, recovery points, target of a restore, transport target
+
+A wrong assumption here is not a typo — it is the difference between reading a log and stopping production.
+
+### But verify programmatically FIRST — *then* ask
+
+**Asking the user for something the system can answer is a failure.** Before you raise a question, ask
+the user to go and look, or request Computer Use / GUI access, you **must** first try to determine it
+programmatically. Only what genuinely cannot be derived — intent, authorization, a business decision, a
+value that exists only in the user's head — is a legitimate question.
+
+| Determine programmatically (do NOT ask) | Ask the user (cannot be derived) |
+|---|---|
+| Which DB — `echo $dbms_type`, profile `dbms/type` | Which **client** to act on |
+| SIDs / instances / hosts / ports — `sapcontrol … GetSystemInstanceList`, `ls /usr/sap` | Whether this system is in scope / approved |
+| Is it up, is the DB up — `GetProcessList`, `R3trans -d` | PRD change approval, downtime window |
+| Kernel / release / patch — `disp+work -version`, `saphostexec -version` | The intended recovery point or retention policy |
+| Which clients **exist** — table `T000` | Which of those clients is **meant** |
+| Free space, log locations, parameter values — `df -h`, `sappfpar`, profile | Business impact / urgency |
+
+Order, always: **verify programmatically → ask only what remains → never assume.**
+
+### Prefer programmatic over manual or GUI
+
+If a task can be done via **CLI, API, SQL or a report**, do it that way rather than GUI clicks, screen
+automation or Computer Use. Programmatic execution is repeatable, reviewable, loggable and diffable;
+screen-driving is none of those. Reach for the GUI or Computer Use only when there is **no programmatic
+path** (some SAP GUI-only transactions genuinely qualify) or when the user asks for it — and say which
+it is and why.
+
+### Ask how output should be handled
+
+Work that produces evidence (logs, traces, command output, screenshots, reports) has two reasonable
+endings. **Ask which the user wants** rather than guessing:
+
+- **(a) persist it** — write the output/logs/screenshots to a file, and say exactly where; or
+- **(b) execute and report** — just run it and give a short final status summary.
+
+Don't dump large output into the conversation unasked, and don't silently discard evidence either — for
+troubleshooting and any change with a rollback, (a) is usually the right default to offer.
+
 ## Run as the correct OS user
 
 **Identify the right OS user *before* running anything, and switch with a login shell.** Wrong-user

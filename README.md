@@ -16,8 +16,32 @@ and never auto-run destructive commands.
 
 ## The guardrail contract (every skill obeys this)
 
-SAP operations commands stop production, delete data, and import transports. Before any command
-that changes state, a skill must:
+SAP operations commands stop production, delete data, and import transports.
+
+### Rule 0 — nothing runs unbacked (non-negotiable)
+
+**Every command executed must be traceable to one of exactly three things:** an **official SAP source**
+(help.sap.com / Operations or Administration Guide), an **SAP Note / KBA**, or an **explicit instruction
+from the user**. Backed by none of those → **don't run it**, and say what backing is missing. Recall,
+plausibility and "this is standard" are not backing.
+
+**Ambiguity ⇒ stop and confirm before executing.** If running the command requires *assuming* anything
+the user didn't state — client number, SID, instance, scope, read-only vs state-changing, PRD vs
+non-PRD, a retention cut-off, a restore target — confirmation is **obligatory**, not optional.
+
+**But verify programmatically first, then ask.** Asking the user for something the system can answer is
+a failure. Determine what is derivable (`echo $dbms_type`, `GetSystemInstanceList`, `disp+work -version`,
+`df -h`, `T000`) *before* raising a question, asking the user to go and look, or requesting Computer Use.
+Only intent, approval and business decisions are legitimate questions.
+Order: **verify programmatically → ask what remains → never assume.**
+
+**Prefer programmatic over GUI.** CLI/API/SQL/report beats screen-driving — it's repeatable, reviewable
+and diffable. Use the GUI or Computer Use only where there's no programmatic path, and say why.
+
+**Ask how output should be handled** — persist logs/screenshots to a file (say where), or execute and
+report a final status. Don't dump large output unasked; don't silently discard evidence either.
+
+### Then, before any state-changing command
 
 1. **Identify** — confirm SID, hostname, instance number, DB type and OS. Never assume.
 2. **Classify** — determine PRD vs non-PRD. Any stop / delete / import against **PRD** requires
@@ -34,8 +58,9 @@ that changes state, a skill must:
 6. **Verify** — run the documented post-check (`GetProcessList`, return codes, `showserver`, …)
    after each step.
 
-Each skill carries the full **"Run as the correct OS user"** matrix (SAP, HANA, Oracle, ASE, Db2, MaxDB,
-SQL Server, Host Agent — UNIX and Windows) so it applies even when a skill is loaded on its own.
+Each skill carries the full **"Execution discipline"** and **"Run as the correct OS user"** sections
+(the latter with the SAP / HANA / Oracle / ASE / Db2 / MaxDB / SQL Server / Host Agent matrix for UNIX and
+Windows) so both apply even when a skill is loaded on its own.
 
 ## Sourcing rule (every generated command)
 
