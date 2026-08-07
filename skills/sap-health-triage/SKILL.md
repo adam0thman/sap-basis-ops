@@ -145,7 +145,9 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
 - **Start/stop the system** (and the order): [sap-system-lifecycle](../sap-system-lifecycle/SKILL.md).
 - **Database up/health:** [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
 - **Clean up full work/trace/log dirs** found here: `sap-housekeeping`.
-- **Full read-only SAPControl diagnostic catalog + `service/protectedwebmethods` detail:**
+- **Full `sapcontrol -function` list** (how to get the definitive per-kernel set via `--help`, plus the
+  category map marking which functions are read-only vs state-changing), the read-only diagnostic
+  catalog and the `service/protectedwebmethods` detail:
   [references/diagnostics-catalog.md](references/diagnostics-catalog.md).
 
 ## Execution discipline (non-negotiable)
