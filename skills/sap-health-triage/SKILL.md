@@ -107,12 +107,19 @@ binary/args on Linux, Windows and AIX.)
 
 ```bash
 disp+work -version                     # kernel release + patch level, DB client, unicode (all OS)
-dpmon pf=<profile>                      # dispatcher/WP monitor from the shell (SM50-like)
+dpmon pf=<profile>                      # dispatcher/WP monitor from the shell — SM50 when you CAN'T log on
 # UNIX resource checks:
 df -h                                   # ⚠️ FILESYSTEM FULL is the #1 "won't start / hung" cause
 ps -ef | grep -E "disp\+work|ms\.sap|sapstartsrv|enserver|enq"
 free -m ; top                           # memory / load
 ```
+> **`dpmon` is the fallback when SM50 is unreachable** (dispatcher up, logon impossible) — SAP documents
+> it exactly that way. Menu keys: `m` work processes, `q` dispatcher queue, `t` show/set per-WP trace
+> level. Trace levels are **0** none · **1** errors (default) · **2** trace messages (*negligible* cost —
+> enough for most troubleshooting) · **3** full data blocks (*significant* cost, only when SAP asks).
+> Prefer SM50 → *Trace → Active Components*; `rdisp/TRACE` in RZ11 changes **all** processes on the
+> instance. Always lower it again. (SAP KBA 3149490, SAP Note 112) [V, T6]
+
 **Windows** equivalents: Task Manager / `Get-Service SAP*` / `wmic logicaldisk get name,freespace` for
 disk, and the **SAP MMC** for the process view. `disp+work -version` and `dpmon` are identical.
 

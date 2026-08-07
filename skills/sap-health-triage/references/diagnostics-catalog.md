@@ -177,6 +177,82 @@ won't start or misbehaves:
 Cross-ref: raise/lower trace parameters per
 [sap-log-reference → app-and-component-logs](../../sap-log-reference/references/app-and-component-logs.md).
 
+## `disp+work` — the work-process binary (and version check)
+
+`disp+work` **is** the ABAP dispatcher/work-process executable, not a utility — the admin use is reading
+what kernel is actually installed. Run as `<sid>adm` from the instance `exe` directory.
+
+```bash
+disp+work -version          # kernel release, patch level, DB client library, Unicode, compile info
+disp+work -V                # same on most releases
+disp+work -h                # option list for THIS kernel (definitive; options vary by release)
+```
+
+What the output answers, and why it matters in triage:
+
+| Field | Use |
+|---|---|
+| **kernel release** (e.g. 7.53/7.77/7.89) + **patch level** | did the kernel patch actually land? matches the SAR you extracted? |
+| **DB client library** / `dbsl` | wrong or missing DBSL ⇒ "database not available" despite a healthy DB |
+| **Unicode** | wrong Unicode/platform binary ⇒ instance won't start at all |
+| compilation / platform | confirms you are on the binary you think you are |
+
+In-system equivalents: **SM51** → Release info, or *System → Status*.
+Cross-ref [sap-kernel-patch](../../sap-kernel-patch/SKILL.md) — `disp+work -version` is the before/after
+check for a kernel swap.
+
+## `dpmon` — dispatcher monitor from the OS (SM50 when you can't log on)
+
+`dpmon` is the **OS-level work-process monitor**: the SM50 view without a SAP GUI session. Its value is
+precisely the case where the system is *partially* up — dispatcher alive, but logon impossible — so SM50
+is unreachable. SAP documents it as the fallback *"in situations where SM50 is not accessible."* [V, T6]
+
+```bash
+# as <sid>adm, from the instance exe directory
+dpmon pf=/usr/sap/<SID>/SYS/profile/<SID>_<INST><nr>_<host>     # interactive, menu-driven
+```
+It opens a menu; the entries are single letters. The ones that matter in triage:
+
+| Key | Shows / does |
+|---|---|
+| **`m`** | work-process list (the SM50 equivalent: PID, type, status, reason, action, user, table) |
+| **`q`** | dispatcher **queue** information — a growing queue means requests are not being served |
+| **`t`** | show the current **trace level** per work process; press `t` again to **set** level + components [V, T6] |
+| `c` / `l` | communication / logon information (release-dependent) |
+| `x` or `q`-to-quit | leave the monitor (the exact key is shown in the menu) |
+
+> The menu differs by kernel release — read the on-screen list rather than assuming a key. `dpmon` is
+> read-only **except** the trace-level option (`t`), which changes instance behaviour: treat that as a
+> change, and lower it again afterwards.
+
+### Work-process trace levels (what `t`, `rdisp/TRACE` and SM50 all set) [V, T6]
+
+| Level | Meaning | Cost |
+|---|---|---|
+| **0** | store nothing | — |
+| **1** | errors only — **the default** | — |
+| **2** | + trace messages | *"slight (negligible) impact"* — **sufficient for most troubleshooting** |
+| **3** | + fully trace data blocks | *"often significantly impact performance"* — only when SAP asks |
+
+Component-level tracing is `rdisp/TRACE_COMPS` (RZ11 → *Display docu* for the component list; Taskhandler
+is usually enough for request-handling issues).
+
+**Four ways to change it, in SAP's order of preference** [V, T6]:
+
+1. **SM50** → *Administration → Trace → Active Components* (recommended; per-WP or a selected group;
+   *Default Values* restores it). Dispatcher-only via *Administration → Trace → Dispatcher*.
+2. **`dpmon`** option `t` — when SM50 is not accessible.
+3. **RZ11 → `rdisp/TRACE`** — but this changes **all** processes on the instance (WPs, dispatcher,
+   gateway, ICM), so prefer 1 or 2 if you only want work processes.
+4. **Instance profile + restart** — for problems that occur *during startup*, where the running-system
+   methods can't help. (`AL11` → `DIR_PROFILE` to find the file.)
+
+Gateway only: **SMGW → Goto → Trace → Gateway → Increase Level**.
+
+> Reminder from the skill body: **raise → reproduce → lower.** Level 3 left on will fill the work
+> directory and slow the instance. Trace files land as `dev_w*` — see
+> [sap-log-reference](../../sap-log-reference/SKILL.md).
+
 ## Instance work directory — what to read
 
 `/usr/sap/<SID>/<INST><nr>/work/` (Windows: `…\work\`). First stop when an instance won't start:
@@ -225,3 +301,18 @@ On `sappfpar`:
   <param>` cross-check. https://me.sap.com/notes/2733511
 - Parameter families are orientation only; the authoritative per-kernel list comes from `sappfpar all`,
   RZ11, or report RSPFPAR/RSPARAM. [G]
+
+On `disp+work` / `dpmon` / trace levels:
+
+- **[T6]** **SAP KBA 3149490** — *How to Increase trace level of Work Process developer traces* (BC-CST).
+  **[V]** Retrieved via the SAP Notes MCP. Source for the four trace levels and their cost — *"Level 1 –
+  store only error information (default)… Level 2 traces typically result in only a slight (negligible)
+  impact on performance while level 3 traces often significantly impact performance. For most
+  troubleshooting purposes level 2 is sufficient."* — for `rdisp/TRACE_COMPS`, for the four change
+  methods in preference order, and for `dpmon`'s documented role: *"Method 2. Using dpmon (In situations
+  where SM50 is not accessible)"* with option `t` to show and set per-WP trace level and components.
+  https://me.sap.com/notes/3149490
+- **SAP Note 112** — *Trace and error information in the "dev_" files* — the canonical reference for the
+  `rdisp/TRACE*` parameters and dev-trace content. https://me.sap.com/notes/112
+- `disp+work -version` / SM51 / *System → Status* for kernel release and patch level — see
+  [../SKILL.md](../SKILL.md) §Sources [T4] and [sap-kernel-patch](../../sap-kernel-patch/SKILL.md). [G]
