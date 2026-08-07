@@ -102,7 +102,10 @@ storage/network. Problems are frequently reported at one layer and caused at ano
    cause and the fastest fix (back it out).
 10. **Don't fix the symptom.** Deleting the failed queue entry, or restarting nightly, hides a defect
     that will return — capture root cause first (Rule 0).
-11. **Beware "it's the network."** Prove it: `niping`, `SM59` test, `R3trans -d`, port checks.
+11. **Beware "it's the network."** Prove it, don't assert it. `niping` runs on the **TCP socket layer**
+    (the same one SAP uses), and SAP's own rule settles the argument: *"If you can reproduce an error
+    using NIPING then the problem is definitely related to the network layers, not to the application."*
+    (SAP Note 500235). Also: `R3trans -d` for kernel→DB, `SM59` connection test, port checks.
 12. **Write down what you ruled out**, not just what you found — that's what makes the next round faster.
 
 ---

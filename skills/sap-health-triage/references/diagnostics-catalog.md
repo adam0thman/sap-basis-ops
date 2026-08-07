@@ -330,6 +330,76 @@ Logs for these live in the instance work directory (`dev_jcontrol`, `dev_server<
 > Like `dpmon`, `jsmon`/`jcmon` can **change state** (restart/stop nodes, enable debugging), not just
 > read. Treat those entries as changes under the execution-discipline rules, not as triage.
 
+## Connectivity tests — `R3trans`, `tp`, `niping`
+
+These three are owned by other skills for their main jobs (`R3trans`/`tp` →
+[sap-transport-mgmt](../../sap-transport-mgmt/SKILL.md), `niping` →
+[sap-saprouter](../../sap-saprouter/SKILL.md)). Listed here for their **diagnostic** use: proving
+where a connection actually breaks.
+
+### `R3trans -d` — can the kernel reach the database?
+
+The fastest, most decisive DB check at OS level. Run as `<sid>adm`:
+
+```bash
+R3trans -d                    # return code 0000 = database reachable
+echo $?                       # 0 = OK; non-zero = could not connect
+```
+- Writes its detail to **`trans.log`** in the current directory — read it on failure; it names the DB
+  error (wrong DBSL, credentials, listener down, DB not open).
+- Use it to split "SAP is broken" from "the DB is unreachable" in one command. If `R3trans -d` succeeds
+  but the instance won't start, the problem is **not** DB connectivity.
+- Pair with `disp+work -version` — a mismatched/missing **DBSL** shows as a connect failure here even
+  though the database itself is perfectly healthy.
+
+### `tp` — is the transport system healthy?
+
+```bash
+tp connect <SID> pf=<TPPARAM>            # tp's own DB connect test
+tp showbuffer <SID> pf=<TPPARAM>         # what's queued (read-only)
+tp checkimpdp <SID> pf=<TPPARAM>         # is the transport daemon (RDDIMPDP) alive?
+```
+Return codes: **0** ok · **4** warnings · **8** errors · **12** fatal · **16** tp environment/`TPPARAM`
+problem. A **16** almost always means environment, not transports (`transdir not set`, bad `pf=`).
+Full detail: [sap-transport-mgmt](../../sap-transport-mgmt/SKILL.md).
+
+### `niping` — is it really the network?
+
+`niping` works on the **TCP socket layer — the same layer SAP applications use** — so unlike ICMP `ping`
+it also catches TCP/socket-implementation problems. It ships with the kernel and with SAPROUTER. [V, T9]
+
+```bash
+# server on host A (port 3298 by default — check the firewall; -S changes it)
+niping -s -I 0                       # last character is ZERO
+niping -s -I 0 -S 5010               # non-default port
+
+# client on host B
+niping -c -H <server> [-B <buffersize>] [-L <loops>] [-D <delay-ms>]
+```
+
+| Test | Command | Read |
+|---|---|---|
+| **Throughput** | `niping -c -H <srv> -B 100000` (gigabit: `-B 8000000`) | **`tr2`** = kB/s |
+| **Round-trip time** | `niping -c -H <srv> -B 1 -L 100` (older builds: `-B 20`) | **`av2`** = ms |
+| **MTU problems** | `niping -c -H <srv> -B <n>` for n = 500, 1000, 1400, 1500, 4000, 10000, 40000 | errors at a specific size |
+| **Firewall idle timeout** | `niping -c -H <srv> -P -D 3600000` | connection dropped between packets |
+| **Stability / intermittent** | `niping -c -H <srv> -B 10000 -D 100 -L 360000` (~10 h) | any `*** ERROR` |
+
+**Reading the output — the two rules that matter** [V, T9]:
+
+- *"NIPING should not abort with an error message under any circumstances. An error is always indicated
+  by a line starting with `*** ERROR ...`"*
+- `NiIRead: hdl 0 recv would block (errno=EAGAIN)` is **not** an error — ignore it.
+
+> **The decisive rule for "it's the network" claims:** *"If you can reproduce an error using NIPING then
+> the problem is definitely related to the network layers, not to the application."* [V, T9]
+> That is how you settle the argument instead of trading assertions — see rule of thumb #11 in the
+> [troubleshooting skill](../../sap-troubleshooting/SKILL.md).
+
+SAP publishes typical values (Gigabit ≈ 100000 kB/s, Fast Ethernet ≈ 10000 kB/s; RTT: Fast Ethernet <1 ms,
+DSL ≈ 40 ms, satellite ≈ 1000 ms) but states explicitly they are dimensional examples — **do not use them
+to evaluate a performance test**. [V, T9]
+
 ## Instance work directory — what to read
 
 `/usr/sap/<SID>/<INST><nr>/work/` (Windows: `…\work\`). First stop when an instance won't start:
@@ -411,3 +481,17 @@ On `saposcol` / `cleanipc` / `jsmon`:
   https://help.sap.com/doc/saphelp_nw74/7.4.16/en-US/c9/291745bd4849e980c5d3b2e1312244/content.htm [G]
 - `cleanipc <nr> show|remove` — SAP kernel tool; run as `<sid>adm` **only against a stopped instance**.
   Cross-referenced in [sap-housekeeping](../../sap-housekeeping/SKILL.md) §5. [G]
+
+On `niping` / `R3trans` / `tp`:
+
+- **[T9]** **SAP Note 500235** — *Network Diagnosis with NIPING* (v21, 2025-01-22). **[V]** Retrieved via
+  the SAP Notes MCP. Source for: NIPING operating *"on the TCP socket layer, which is the same layer used
+  by SAP application programs"*; `niping -s -I 0` / `niping -c -H <srv> -B -L -D`; the **default port
+  3298** and `-S` to change it; throughput via **`tr2`** and RTT via **`av2`**; the MTU buffer-size sweep;
+  the `-P -D 3600000` idle-timeout test; that *"an error is always indicated by a line starting with
+  `*** ERROR`"* while `NiIRead… EAGAIN` is benign; the typical-values table with SAP's own caveat not to
+  use it for performance evaluation; and the decisive statement *"If you can reproduce an error using
+  NIPING then the problem is definitely related to the network layers, not to the application."*
+  https://me.sap.com/notes/500235
+- `R3trans -d` (RC 0000 = DB reachable, detail in `trans.log`) and the `tp` return codes / `tp connect` /
+  `tp checkimpdp` — see [sap-transport-mgmt](../../sap-transport-mgmt/SKILL.md) §Sources. [G]
