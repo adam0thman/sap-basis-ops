@@ -91,7 +91,13 @@ sappfpar all pf=/usr/sap/<SID>/SYS/profile/<SID>_<INST><nr>_<host>
 sappfpar check pf=<profile> nr=<nr> name=<SID>
 ```
 Notes [V/G, T3]: displayed values are those that become **effective after the next startup**; the `SAP:`
-column shows kernel **defaults**. Run `sappfpar check` **after any profile change and before restarting**
+column shows kernel **defaults**.
+
+> ⚠️ **If `check` keeps reporting the same error after you fixed the parameter**, it probably never read
+> your profile — look for `== Checking profile: <no_profile>` on the first line. Caused by a relative
+> path, a **space after `pf=`**, or omitting `pf=`; the results are then **kernel defaults**, not your
+> instance. Use the full path with no space: `sappfpar check pf=/usr/sap/<SID>/SYS/profile/<profile>`,
+> and cross-check with `sapcontrol -nr <nr> -function ParameterValue <param>`. (SAP KBA 2733511) [V, T3] Run `sappfpar check` **after any profile change and before restarting**
 — it catches bad parameter values and insufficient memory that would otherwise fail the start. (Same
 binary/args on Linux, Windows and AIX.)
 

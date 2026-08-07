@@ -99,20 +99,83 @@ unless you either:
 
 Check first: `sapcontrol -nr <nr> -function AccessCheck <Function>` (this one is not protected).
 
-## `sappfpar` argument reference
+## `sappfpar` — profile parameter validator
 
-Kernel profile validator — works while the system is **down**. [KBA 2733511]
+Kernel profile validator; **works while the system is down**, which makes it the tool for "won't start"
+and for validating a profile change *before* a restart.
+
+### Commands & arguments
+
 ```
 sappfpar <command> [pf=<profile>] [nr=<nr>] [name=<SID>]
-  check     validate parameters, check shared-memory config, estimate memory requirement
-  all       print every parameter the kernel knows + effective value from the profile
-  <name>    print a single parameter's value
-  help      usage
+  check          validate parameters, check the shared-memory configuration,
+                 and estimate the memory requirement
+  all            print EVERY parameter the kernel knows + the effective value
+  <param-name>   print a single parameter's value  (e.g. sappfpar rdisp/wp_no_dia pf=…)
+  help           usage / the command list for this kernel
 ```
-- Effective values shown are those that apply **after the next startup**; the `SAP:` column = kernel
-  default.
-- Typical use: `sappfpar check pf=/usr/sap/<SID>/SYS/profile/<SID>_<INST><nr>_<host>` after any profile
-  change, **before** `StartSystem`.
+
+| Argument | Meaning |
+|---|---|
+| `pf=<profile>` | the profile to read — **use the full path** (see the trap below) |
+| `nr=<nr>` | instance number to evaluate for |
+| `name=<SID>` | system ID to evaluate for |
+
+### Getting the definitive parameter list
+
+There is no fixed list to memorise — the parameter set is **kernel-release specific**, so enumerate it
+from the system rather than from this file:
+
+```bash
+sappfpar all pf=/usr/sap/<SID>/SYS/profile/<SID>_<INST><nr>_<host>          # every parameter + effective value
+sappfpar all pf=<profile> | grep -i "^rdisp/"                                # one family
+sappfpar <param> pf=<profile>                                                # a single value
+sapcontrol -nr <nr> -function ParameterValue <param>                         # value in the RUNNING instance [V, T3]
+```
+In the system: **RZ11** (parameter documentation + current/effective values), **RZ10** (profile
+maintenance), report **RSPFPAR** / **RSPARAM** (parameter list with defaults).
+
+> Read `sappfpar all` output correctly: the effective values shown are those that apply **after the next
+> startup**, and the `SAP:` column is the **kernel default**, not your setting. To see what the *running*
+> instance actually has, use `sapcontrol … ParameterValue` or RZ11.
+
+### ⚠️ The `<no_profile>` trap (why "the error never goes away")
+
+Classic symptom: you fix a parameter, re-run `sappfpar check`, and it reports **the same error**. Cause:
+the profile was not read at all, so you are looking at **kernel defaults**, not your instance. [V, T3]
+
+- Tell-tale: the first line of the output reads
+  `== Checking profile: <no_profile>`
+- Causes: a relative/short profile name, a **space after `pf=`**, illegal characters, or omitting `pf=`.
+- Fix — full path, no space after `=`:
+  ```bash
+  sappfpar check pf=/usr/sap/<SID>/SYS/profile/<SID>_<INST><nr>_<host>    # correct
+  # wrong: sappfpar check pf=<profile name>      (not a full path)
+  # wrong: sappfpar check pf= /usr/sap/...       (space after '=')
+  ```
+- Cross-check a value against the running system with
+  `sapcontrol -nr <nr> -function ParameterValue <param>`. [V, T3]
+
+### Parameter families worth knowing (orientation for triage)
+
+Not exhaustive — use `sappfpar all` for the real list. These are the families that come up when a system
+won't start or misbehaves:
+
+| Family | Controls |
+|---|---|
+| `rdisp/…` | dispatcher & work processes — `wp_no_dia`, `wp_no_btc`, `wp_no_upd`, `wp_no_enq`, `wp_no_spo`, `max_wprun_time`, `TRACE` |
+| `abap/…` | ABAP runtime — `heap_area_dia`, `heap_area_total`, `buffersize`, `swap_reserve` |
+| `em/…`, `ztta/…`, `PHYS_MEMSIZE` | extended/roll memory sizing — the usual suspects in memory errors |
+| `ipc/shm_psize_<key>` | **shared-memory pools** — the "pool too small" errors `check` reports |
+| `enque/…` | enqueue server (lock table size, server host/port) |
+| `icm/…` | ICM: `server_port_<n>`, `trace_level`, `HTTP/logging_<n>` |
+| `gw/…` | gateway: `logging`, `sec_info`, `reg_info` |
+| `login/…`, `rsau/…` | logon policy / password rules; Security Audit Log config |
+| `DIR_…`, `SAPGLOBALHOST`, `SAPSYSTEMNAME`, `INSTANCE_NAME` | directories & identity — wrong values here break startup |
+| `dbs/…`, `dbms/type` | database connection / type |
+
+Cross-ref: raise/lower trace parameters per
+[sap-log-reference → app-and-component-logs](../../sap-log-reference/references/app-and-component-logs.md).
 
 ## Instance work directory — what to read
 
@@ -149,3 +212,16 @@ On the `-function` list specifically:
 - **[T5]** *How to use the SAPControl Web Service Interface* — SAP NetWeaver Server Infrastructure; the
   webmethod reference behind the category map. Function availability differs by release/patch level, so
   treat the map as orientation and `--help` + `AccessCheck` as ground truth. [G]
+
+On `sappfpar`:
+
+- **[T3]** **SAP KBA 2733511** — *sappfpar check pf=&lt;profile name&gt; still shows the same error after
+  changing the related parameter* (BC-CST-LL). **[V]** Retrieved via the SAP Notes MCP. Documents the
+  `<no_profile>` trap verbatim: *"The value of the profile name is invalid or the input has illegal
+  characters. The first line of the sappfpar is `<no_profile>`… The parameter result is from the
+  Kernel-Default, not the current instance parameter status."* — including that it also happens *"if the
+  command is executed without the pf= value"*, that the fix is *"the full path of the instance profile
+  name and without spaces after the `=`"*, and the `sapcontrol -nr <nr> -function ParameterValue
+  <param>` cross-check. https://me.sap.com/notes/2733511
+- Parameter families are orientation only; the authoritative per-kernel list comes from `sappfpar all`,
+  RZ11, or report RSPFPAR/RSPARAM. [G]
