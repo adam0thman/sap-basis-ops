@@ -253,6 +253,83 @@ Gateway only: **SMGW → Goto → Trace → Gateway → Increase Level**.
 > directory and slow the instance. Trace files land as `dev_w*` — see
 > [sap-log-reference](../../sap-log-reference/SKILL.md).
 
+## `saposcol` — the OS collector (what feeds ST06)
+
+One collector **per host**, SID-independent. It samples CPU/memory/disk/network into shared memory;
+ST06/OS07N, CCMS, Solution Manager and EarlyWatch all read from it. **No saposcol ⇒ no OS data anywhere.**
+
+> **Modern model:** saposcol is started and supervised by the **SAP Host Agent**, *not* per instance.
+> The old "one saposcol per instance from the instance `exe` dir" model is **no longer supported**. [V, T7]
+
+```bash
+saposcol -s        # status — check "Current Time" vs "Last write access"
+saposcol -m        # dump the data collected in the last collection interval
+saposcol -d        # dialog mode; inside: `stat` (shows trace level), `trace` (toggle 1<->3)
+saposcol -b        # generate the hardware-info file
+ps -ef | grep saposcol      # UNIX — expect exactly ONE (up to 3 briefly at startup)
+```
+
+**"No OS data in ST06" ladder** [V, T7]:
+
+1. **Is it running?** `ps -ef | grep saposcol`. If not, check `host_profile`
+   (`/usr/sap/hostctrl/exe` or `…\SAP\hostctrl\exe`) for `hostexec/startoscol = false` — delete/comment
+   it, then `saphostexec -restart`.
+2. **Is the data fresh?** `saposcol -s` — *"'Last write access' should be not more than 'Collection
+   interval' older than 'Current time'."* Collection interval should be **60s, not 10**.
+3. **Shared memory stuck?** Stop it (`saphostexec -stop`), confirm no saposcol running, then on UNIX
+   `ipcs | grep 4dbe` → remove with `ipcrm -M 0x00004dbe` (that key is saposcol's only, nothing else is
+   affected), delete the **`coll.put`** backup file (`/usr/sap/tmp`), and `saphostexec -restart`.
+4. **Web-service path** (NWA/SolMan read via the Host Agent, not saposcol directly): `host_profile` must
+   contain `SAPOscol` in `service/porttypes` (**case-sensitive**), then
+   `saphostctrl -function GetSAPOSColVersion` and `GetSAPOSColHWConf` must return *"Webmethod returned
+   successfully"*.
+5. **Too many processes?** Exactly one is correct. Several usually means the obsolete per-instance model
+   — move to the SAP Host Agent.
+6. **Tracing:** `hostexec/oscol/arguments = -t3 -tl0` in `host_profile` + `saphostexec -restart`, or
+   without a restart via `saposcol -d` → `trace`. Trace lands in **`dev_coll`** (`/usr/sap/tmp`); it
+   grows, so turn it off afterwards. *(Trace changes only take effect from the next collection interval.)*
+
+> `WaitFree() failed. No write access to shared memory` in the log is **not** an error by itself —
+> saposcol's shared memory is exclusive, and it skips a write if a reader holds it. [V, T7]
+
+## `cleanipc` — remove orphaned shared memory / semaphores
+
+After a crash or a hard kill, an instance can leave IPC resources behind that block the next start.
+
+```bash
+cleanipc <nr> show          # list the IPC resources of instance <nr>   (read-only, safe)
+cleanipc <nr> remove        # ⚠️ remove them — ONLY when that instance is DOWN
+```
+
+> ⚠️ **Verify the instance is stopped first.** `cleanipc … remove` wipes the instance's shared memory; run
+> against a *running* instance it will take it down / corrupt it. Confirm with
+> `sapcontrol -nr <nr> -function GetProcessList` and `ps -ef | grep <SID>` before removing. Run as
+> `<sid>adm`. Related but separate: saposcol's own shared memory is cleaned with `ipcrm` (above), not
+> `cleanipc`. [G]
+
+## `jsmon` / `jcmon` — the Java-stack equivalent of `dpmon`
+
+Only where **AS Java** is installed (PI/PO, EP, Solution Manager Java, dual-stack). Same idea as `dpmon`:
+inspect the instance from the OS with minimal infrastructure, when the admin UI is unreachable. [G, T8]
+
+```bash
+jsmon pf=/usr/sap/<SID>/SYS/profile/<SID>_<INSTANCE>_<HOST>    # AS Java 7.1 and higher
+jcmon pf=<profile>                                              # releases BEFORE NetWeaver 7.1
+```
+- Menu-driven (process list, enable/disable/restart a node, shut the instance down, debugging, ports).
+- **Version boundary:** use **`jsmon`** on **7.1+**; on older releases the tool is **`jcmon`**. [G, T8]
+
+Process model to recognise on the host:
+```bash
+ps -ef | grep jcontrol      # jcontrol starts/stops/monitors the Java instance
+ps -ef | grep jlaunch       # jlaunch runs the Java nodes (server/dispatcher) that jcontrol starts
+```
+Logs for these live in the instance work directory (`dev_jcontrol`, `dev_server<n>`, `std_server<n>.out`)
+— see [sap-log-reference](../../sap-log-reference/SKILL.md) §7.
+
+> Like `dpmon`, `jsmon`/`jcmon` can **change state** (restart/stop nodes, enable debugging), not just
+> read. Treat those entries as changes under the execution-discipline rules, not as triage.
+
 ## Instance work directory — what to read
 
 `/usr/sap/<SID>/<INST><nr>/work/` (Windows: `…\work\`). First stop when an instance won't start:
@@ -316,3 +393,21 @@ On `disp+work` / `dpmon` / trace levels:
   `rdisp/TRACE*` parameters and dev-trace content. https://me.sap.com/notes/112
 - `disp+work -version` / SM51 / *System → Status* for kernel release and patch level — see
   [../SKILL.md](../SKILL.md) §Sources [T4] and [sap-kernel-patch](../../sap-kernel-patch/SKILL.md). [G]
+
+On `saposcol` / `cleanipc` / `jsmon`:
+
+- **[T7]** **SAP Note 2179983** — *Basic 'missing OS data' troubleshooting* (BC-CCM-MON-OS). **[V]**
+  Retrieved via the SAP Notes MCP. Source for the whole saposcol ladder: `-s` / `-m` / `-d` (`stat`,
+  `trace`) / `-b`; the `hostexec/startoscol = false` switch; `saphostexec -restart`; the shared-memory
+  cleanup (`ipcs | grep 4dbe`, `ipcrm -M 0x00004dbe`, delete `coll.put`); `service/porttypes` needing
+  **`SAPOscol`** and the `saphostctrl -function GetSAPOSColVersion` / `GetSAPOSColHWConf` checks;
+  *"There should be one saposcol process running"*; the 60s collection interval; `dev_coll` tracing via
+  `hostexec/oscol/arguments = -t3 -tl0`; and that `WaitFree() failed…` is benign. Also states the
+  per-instance saposcol model *"is not supported anymore"* — use the SAP Host Agent (SAP Note 1031096).
+  https://me.sap.com/notes/2179983
+- **[T8]** *Using the Command Line Program `jsmon`* — SAP Help Portal (Java Startup and Control
+  Framework, AS Java 7.1+): `jsmon pf=<path to profile>`; on releases **before** NetWeaver 7.1 use
+  `jcmon`. `jcontrol` starts/stops/monitors the Java instance and launches the `jlaunch` node processes.
+  https://help.sap.com/doc/saphelp_nw74/7.4.16/en-US/c9/291745bd4849e980c5d3b2e1312244/content.htm [G]
+- `cleanipc <nr> show|remove` — SAP kernel tool; run as `<sid>adm` **only against a stopped instance**.
+  Cross-referenced in [sap-housekeeping](../../sap-housekeeping/SKILL.md) §5. [G]

@@ -112,6 +112,7 @@ dpmon pf=<profile>                      # dispatcher/WP monitor from the shell �
 df -h                                   # ⚠️ FILESYSTEM FULL is the #1 "won't start / hung" cause
 ps -ef | grep -E "disp\+work|ms\.sap|sapstartsrv|enserver|enq"
 free -m ; top                           # memory / load
+saposcol -s                             # OS collector status — no saposcol => no ST06/CCMS/EWA data at all
 ```
 > **`dpmon` is the fallback when SM50 is unreachable** (dispatcher up, logon impossible) — SAP documents
 > it exactly that way. Menu keys: `m` work processes, `q` dispatcher queue, `t` show/set per-WP trace
