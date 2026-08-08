@@ -104,7 +104,9 @@ SAP_PASSWORD="your-password"
 > redirect, and is easily mistaken for an MFA problem.
 
 The skills then use its two tools — `search` (find Notes by topic) and `fetch` (full Note text, validity,
-prerequisites, side effects). **The MCP is optional**: without it the skills still work from their cited
+support packages, references, prerequisites, side effects, and — with `includeCorrections=true` —
+**correction instructions per software component and release range**, including the `downloadUrl` that
+identifies a **TCI** and points at its transport package). **The MCP is optional**: without it the skills still work from their cited
 help.sap.com sources, but they will say the currency check was skipped rather than assume they are current.
 
 ## Layout

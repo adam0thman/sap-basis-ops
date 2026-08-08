@@ -95,10 +95,43 @@ Those are the action items.
 
 ---
 
+## 5a. Know what kind of correction the note carries — CI vs **TCI**
+
+Before planning, determine **how** the note delivers its fix. This changes the effort, the prerequisites
+and the downtime.
+
+| | **Classic CI** (correction instruction) | **TCI** (Transport-Based Correction Instruction) |
+|---|---|---|
+| Delivery | Correction instructions embedded in the note; SNOTE patches existing objects | A **transport** (package downloaded from SAP), imported into the system |
+| Used when | changes to **existing** repository objects | the fix needs **new objects** (new tables, DDIC, function modules) that a classic CI cannot create |
+| Applied via | **SNOTE** | **SNOTE** with TCI enabled — needs a minimum **SPAM/SAINT** level and one-time setup [P6] |
+| Effort | usually low | higher: transport import, prerequisites, more caution |
+
+**Structure worth internalising:** a correction instruction is bound to a **software component *and* a
+release range**. A note with 11 corrections typically has **one CI per release** — e.g. SAP Note 3096734
+carries 11 CIs for SAP_BASIS 700, 701, 702, 731, 740, 750… Only the CI matching *your* component version
+applies. That's why "does this note apply to my stack" is answered by the correction/validity ranges, not
+by the note title.
+
+**How to tell them apart:**
+- In SAP for Me: a TCI note says so in its text and its correction row carries a **download link** for the
+  transport package; a classic CI has none.
+- **Via the SAP Notes MCP** (`fetch(id, includeCorrections=true)`): each entry in `correctionDetails`
+  carries `softwareComponent` + `versionFrom`/`versionTo`, and **`downloadUrl` is present only for TCI**
+  — a structural check, no text parsing. (Contributed upstream; see the plugin README's MCP section.)
+- In the system: **SNOTE** shows the implementation type and will tell you if TCI support is missing
+  (errors **TN835 / TN872** — SAP Note 2499947). [P6]
+
+> ⚠️ **TCI is a transport import, not just a note.** Treat it with transport-level care
+> ([sap-transport-mgmt](../sap-transport-mgmt/SKILL.md)): DEV → QAS → PRD, backup first, and confirm the
+> SPAM/SAINT prerequisite *before* the change window — discovering it mid-window is the classic failure.
+
 ## 6. Implement & verify (change-controlled)
 
 - **SNOTE** (Note Assistant): download + implement in **DEV**, run the automatic activities, resolve
   prerequisites, test → **transport to QAS → PRD**. [P5]
+- **TCI notes:** ensure SPAM/SAINT meets the minimum and TCI is enabled, then implement via SNOTE, which
+  imports the transport. Follow **SAP Note 2543372** for the procedure. [P6]
 - **Kernel / SP notes:** apply the patched kernel or Support Package via **SUM / SPAM/SAINT** in a
   maintenance window (OS-specific kernel per platform — Linux/Windows/AIX download from the SAP Software
   Center). Cross-ref a future `sap-kernel-patch` skill.
@@ -245,6 +278,15 @@ assuming this file is current.
   validation. help.sap.com (Focused Run).
 - **[P5]** **SNOTE** (Note Assistant) + **`RSECNOTE`** — implement/track security notes on the system.
   help.sap.com (Note Assistant).
+- **[P6]** **Transport-Based Correction Instructions (TCI)** — **SAP Note 2187425** (*Information about
+  SAP Note Transport based Correction Instructions*), **2543372** (*How to implement TCI*), **2499947**
+  (*TN835 or TN872: the transport based correction of SAP Note is not available*), **2576306** (TCI for
+  download of digitally signed SAP Notes). Component BC-UPG-NA.
+  https://me.sap.com/notes/2187425 · https://me.sap.com/notes/2543372
+- **[P7]** CI/TCI structure verified directly against the SAP for Me backend during authoring: one
+  correction instruction per software component **and release range**; the correction row's
+  `DownloadURL` is populated **only** for TCI. Sampled 3096734 / 2168979 / 2961006 (classic CI, no
+  download URL) vs 3195213 / 3275780 / 3401735 (TCI, download URL present). **[V]**
 
 **To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID): the current SAP Security Notes FAQ
 note and the System Recommendations setup guide for your Solution Manager / Focused Run release.
