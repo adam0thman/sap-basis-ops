@@ -123,6 +123,7 @@ sap-basis-ops/
     ├── sap-housekeeping/             # reorg jobs, work-dir/audit/spool cleanup, cleanipc
     ├── sap-transport-mgmt/           # OS-layer tp / R3trans, buffer, unconditional modes
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
+    ├── sap-software-download/        # Software Center: find/qualify files, SP queues, checksums
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
@@ -135,7 +136,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 13 skills.
+Phases 1 & 2 complete — 14 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -158,6 +159,10 @@ Phases 1 & 2 complete — 13 skills.
   modes, return codes, RDDIMPDP; STMS-preferred guidance.
 - ✅ `sap-kernel-patch` — kernel swap (SAPCAR/SAPEXE/SAPEXEDB/`saproot.sh`/`sapcpe`) + Host Agent update
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
+- ✅ `sap-software-download` — SAP for Me **Software Center**: resolve a component to exact filenames,
+  object keys, sizes, SHA-256 checksums, required SPAM level and EPS `.PAT` names via the Software
+  Center's own OData service; build a correct SP import queue; verify and stage per OS. Endpoints
+  verified live against the service.
 - ✅ `sap-backup-recovery` — backup types + recovery types (most-recent / PITR / specific), log-mode
   prerequisites, and per-DB restore/recover commands (HANA/Oracle/ASE/Db2/MaxDB/SQL Server).
 
