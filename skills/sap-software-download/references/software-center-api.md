@@ -80,6 +80,48 @@ mainline `^SAPK-740\d+INSTPI$` pattern. Always filter on the filename pattern fo
 
 ---
 
+## Navigating the add-on tree (nodes, not files)
+
+`SearchResultSet` returns **navigation nodes** as well as files. A node has an **empty `Fastkey`** and a
+populated **`SubtreeEvent`**. For add-ons this is the norm, not the exception: `ST-A/PI` returned 57 rows of
+which only 3 were downloadable. **[V]**
+
+Two discriminators live in those event strings: **[V]**
+
+| Parameter | Values | Meaning |
+|---|---|---|
+| `V` | `INST` / `MAINT` | `Infotype` — Installation vs Maintenance Software Component |
+| `SWTYPSC` | `N` / `X` | delivery type — **INSTALLATION** (SAINT) vs **EXCHANGE-UPGRADE** |
+| `ENR` | 20-digit | software component release number |
+| `TA` | `ACTUAL` | current vs archive view |
+
+The events are **raw query strings, not OData**. Pass them verbatim; `$filter=Id eq '<event>'` returns 0
+rows, as does `HierarchyItemSet?Id='<event>'`. **[V]**
+
+```
+# node -> child nodes (INSTALLATION / EXCHANGE-UPGRADE)
+GET .../HierarchyItemSet?_EVENT=DISPHIER&EVENT=TREE&NE=NAVIGATE&ENR=<ENR>&V=INST&TA=ACTUAL&$format=json
+
+# child node -> files.  This is DownloadItemSet, NOT ObjectListItemSet (which returns 0).
+GET .../DownloadItemSet?_EVENT=LIST&EVENT=LIST&ENR=<ENR>&SWTYPSC=N&PECCLSC=NONE&V=INST&TA=ACTUAL&$format=json
+```
+
+`DownloadItemSet` rows carry `Fastkey`, `Title`, `Description`, `Filesize` and a path-style `Filename`
+(e.g. `001/2025/0000000010/000000096533/003/KITABCA.SAR`). Feed `Fastkey` to `ObjectSet` for the checksum
+and SPAM level, and to the download URL.
+
+Verified on **ST-A/PI 01X_731**, `ENR=73555000100200023403`: **[V]**
+
+| `SWTYPSC` | Node | Title | Fastkey | Bytes |
+|---|---|---|---|---|
+| `N` | INSTALLATION | `SAPKITABCA` | `0010000000965332025` | 77,646,332 |
+| `X` | EXCHANGE-UPGRADE | `SAPK-01XCAINSSA` | `0010000001017592025` | 77,643,960 |
+
+The two differ by **0.003 %** in size and are both valid `CAR 2.01` archives — size, type and checksum
+cannot tell you that you took the wrong branch. Only the node can.
+
+---
+
 ## Object metadata
 
 ```

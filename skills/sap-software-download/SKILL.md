@@ -8,8 +8,10 @@ description: >-
   where the files go and how to verify them on Linux, Windows and AIX. Downloads are fully scriptable with
   X.509 client-certificate auth (the SAML chain is documented hop by hop); browser-session auth needs a
   human. Use for "download a support package", "which SP is latest", "get the kernel SAR", "SP queue from
-  SP28 to latest", "software center", "automate SAP downloads", "SAPCAR extract", "EPS/in". Cited to the
-  live service and SAP Notes.
+  SP28 to latest", "software center", "automate SAP downloads", "SAPCAR extract", "EPS/in". For add-ons
+  (ST-A/PI, ST-PI) it walks the INSTALLATION vs EXCHANGE-UPGRADE tree so you fetch the right delivery type
+  — or both. Use also for "SAINT installation package", "exchange upgrade package", "add-on download".
+  Cited to the live service and SAP Notes.
 ---
 
 # SAP Software Download (SAP for Me Software Center)
@@ -31,6 +33,9 @@ four before anything is fetched.
 >   discovering a truncated `.SAR` during `IMPORT_PROPER`.
 > - **Check the component's release-strategy Note and known-issue Notes before building a queue** (§4) —
 >   locked packages and mandatory co-imports are announced there, not in the file list.
+> - **Add-ons: identify the delivery type, and download both** (§2a). INSTALLATION (SAINT) and
+>   EXCHANGE-UPGRADE are near-identical in size and both valid archives — nothing but the tree node you
+>   descended tells them apart.
 
 Verification legend: **[V]** verified against the live service during authoring · **[G]** cited to the
 official guide/Note.
@@ -88,6 +93,12 @@ Each hit gives `Title` (the filename, e.g. `SAPK-74035INSTPI`), `Description` (`
 > the component name (e.g. `SAPK74000NCPSTPI`, *Business Transformation Center*). Importing the wrong family
 > is a real and easy mistake. **[V]**
 
+> 🚨 **For add-ons, search returns almost no files — it returns *navigation nodes*.** A search for
+> `ST-A/PI` returns **57 rows of which only 3 are downloadable**; the other 54 are nodes with an **empty
+> `Fastkey`**. A search for `ST-A/PI 01X_731` returns **two rows, identical `Title`, zero files** —
+> differing only by `Infotype`. Taking "the file from the search result" for an add-on is how you end up
+> with the wrong delivery type. Descend properly — §2a. **[V]**
+
 **Qualify** — the search row does not tell you whether you can actually use the file. `ObjectSet` does: **[V]**
 
 ```
@@ -114,6 +125,71 @@ Two navigation properties matter: **[V]**
 
 Confirm you're even allowed to download: `DownloadAuthProfileSet` returns your S-user with `Active: true`.
 If `Active` is false, it's an authorization problem, not a technical one. **[V]**
+
+---
+
+## 2a. Add-ons: INSTALLATION vs EXCHANGE-UPGRADE — get **both**
+
+Add-ons (ST-A/PI, ST-PI, and friends) are not published as a flat file list. They sit behind a two-level
+tree, and **each level splits into two variants that look almost identical**. Pick the wrong branch and you
+get a file that is the right size, the right component and the wrong thing.
+
+**Level 1 — `Infotype`, carried in `SubtreeEvent` as `V=`:** **[V]**
+
+| `Infotype` | `V=` | Meaning |
+|---|---|---|
+| Installation Software Component | `INST` | fresh installs and upgrades |
+| Maintenance Software Component | `MAINT` | maintenance deliveries |
+
+(*Archive View* variants of both exist for older releases.)
+
+**Level 2 — the delivery type, carried in `ListEvent` as `SWTYPSC=`:** **[V]**
+
+| Child node | `SWTYPSC=` | What it is |
+|---|---|---|
+| **INSTALLATION** | `N` | the **SAINT installation package** — installing the add-on |
+| **EXCHANGE-UPGRADE** | `X` | the **exchange/update package** — moving an existing add-on up |
+
+> 🚨 **Download both, every time.** Which one applies depends on whether the target system already has the
+> add-on at a lower level, and you often cannot confirm that until SAINT/SPAM tells you. Having the wrong
+> one at the change window means a second download round-trip under time pressure. Both together are
+> usually a modest download; the delay is not.
+>
+> **The sizes will not save you.** For ST-A/PI 01X_731 the two files are **77,646,332** and **77,643,960**
+> bytes — **0.003 % apart**. Both are valid `CAR 2.01` archives. Nothing about the size, type or checksum
+> tells you that you fetched the wrong *kind*. Only the node you descended through does. **[V]**
+
+### Walking the tree
+
+Search gives you a node whose `SubtreeEvent` holds the parameters; **pass that raw event string as the
+query string** to `HierarchyItemSet` (it is not an OData `$filter` — filtering on `Id` returns 0 rows), then
+pass the child's `ListEvent` to **`DownloadItemSet`**: **[V]**
+
+```
+# 1. node → children (INSTALLATION / EXCHANGE-UPGRADE)
+GET /services/odata/svt/swdcuisrv/HierarchyItemSet
+      ?_EVENT=DISPHIER&EVENT=TREE&NE=NAVIGATE&ENR=<ENR>&V=INST&TA=ACTUAL&$format=json
+
+# 2. child → files.  SWTYPSC=N installation | SWTYPSC=X exchange-upgrade
+GET /services/odata/svt/swdcuisrv/DownloadItemSet
+      ?_EVENT=LIST&EVENT=LIST&ENR=<ENR>&SWTYPSC=N&PECCLSC=NONE&V=INST&TA=ACTUAL&$format=json
+
+# 3. file → full metadata (checksum, SPAM level, status)
+GET /services/odata/svt/swdcuisrv/ObjectSet('<Fastkey>')?$format=json
+```
+
+`ENR` is the software-component-release number, taken from the search row's `SubtreeEvent`. Note
+`DownloadItemSet` — **not** `ObjectListItemSet`, which returns 0 rows for these events. **[V]**
+
+**Worked example — ST-A/PI 01X_731** (`ENR=73555000100200023403`), both fetched and SHA-256 verified: **[V]**
+
+| Delivery type | `SWTYPSC` | Title | Fastkey | Bytes |
+|---|---|---|---|---|
+| **INSTALLATION** (SAINT) | `N` | `SAPKITABCA` | `0010000000965332025` | 77,646,332 |
+| **EXCHANGE-UPGRADE** | `X` | `SAPK-01XCAINSSA` | `0010000001017592025` | 77,643,960 |
+
+Both require **SPAM/SAINT 0020**. Note the naming gives a hint once you know to look — `SAPK-…INSSA`
+carries the exchange/update marker — but do not rely on filename shape across components; rely on the node.
 
 ---
 
@@ -391,6 +467,18 @@ assuming this file is current.
   support packages (SP29–SP35) downloaded unattended, 58,917,370 bytes, **every SHA-256 matching
   `ObjectSet.Checksum`**, each a valid `CAR 2.01` archive. With browser-session cookies the same URL needs a
   human. Object info page `https://me.sap.com/softwarecenter/object/<ObjectKey>`. **[V]**
+- **[SC4]** Add-on tree navigation — `SearchResultSet` returns navigation nodes (empty `Fastkey`,
+  populated `SubtreeEvent`) as well as files; `V=INST`/`V=MAINT` selects the `Infotype`, and
+  `SWTYPSC=N`/`SWTYPSC=X` selects **INSTALLATION** vs **EXCHANGE-UPGRADE**. Events are raw query strings,
+  consumed by `HierarchyItemSet` then `DownloadItemSet` (**not** `ObjectListItemSet`, which returns 0 rows).
+  **Verified live on ST-A/PI 01X_731** (`ENR=73555000100200023403`): `SAPKITABCA` (installation,
+  77,646,332 B) and `SAPK-01XCAINSSA` (exchange-upgrade, 77,643,960 B), both downloaded and SHA-256
+  verified, both valid `CAR 2.01`, both requiring SPAM/SAINT 0020. **[V]**
+- **[SC5]** Correction of record: revisions before 0.6.0 documented only the "filter by filename pattern"
+  trap, which does not help for add-ons — their search results contain **almost no files at all**. Reported
+  from the field after an ST-A/PI 01X_731 download produced the EXCHANGE-UPGRADE package where the
+  INSTALLATION (SAINT) package was wanted. The two are 0.003 % apart in size, so nothing downstream catches
+  it. Guidance is now: identify the delivery type explicitly, and **fetch both**. **[V]**
 - **[SC3]** Correction of record: an earlier revision of this skill stated the download "does not complete
   under automation". That was generalised from a single surface (a browser extension driving a cookie
   session) and is **wrong** — the credential, not the automation, is what gates it. Certificate auth
