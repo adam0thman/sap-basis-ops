@@ -5,9 +5,11 @@ description: >-
   and patches, installation media, add-ons — and build a correct SP import queue. Resolves a component
   (e.g. "ST-PI 740") to exact filenames, object keys, file sizes, SHA-256 checksums, the required
   SPAM/SAINT level and the EPS .PAT name, using the Software Center's own OData service. Then covers
-  where the files go and how to verify them on Linux, Windows and AIX. Use for "download a support
-  package", "which SP is latest", "get the kernel SAR", "SP queue from SP28 to latest", "software center",
-  "SAPCAR extract", "EPS/in". Cited to the live service and SAP Notes.
+  where the files go and how to verify them on Linux, Windows and AIX. Downloads are fully scriptable with
+  X.509 client-certificate auth (the SAML chain is documented hop by hop); browser-session auth needs a
+  human. Use for "download a support package", "which SP is latest", "get the kernel SAR", "SP queue from
+  SP28 to latest", "software center", "automate SAP downloads", "SAPCAR extract", "EPS/in". Cited to the
+  live service and SAP Notes.
 ---
 
 # SAP Software Download (SAP for Me Software Center)
@@ -17,16 +19,18 @@ the **component + release**, the **patch/SP level**, the **platform** (OS + DB +
 the **prerequisites** (SPAM/SAINT level, minimum SAP_BASIS, mandatory co-imports). This skill resolves all
 four before anything is fetched.
 
-> **Guardrail — Claude finds and qualifies; the human downloads.**
-> - The Software Center **search and metadata APIs work with your logged-in session** — Claude can list
->   packages, resolve exact filenames, sizes, checksums and prerequisites. **[V]**
-> - The **file download itself is SAML-SSO-gated** and does not complete under automation (it stalls on
->   `accounts.sap.com/saml2/idp/sso`). Claude produces the direct links; **you click them** in your own
->   browser, or use the **Download Basket + SAP Download Manager** for a multi-file set. **[V]**
+> **Guardrail — the whole workflow is automatable, with the right credential.**
+> - Search, metadata **and the file download itself** work end-to-end without a browser, using
+>   **X.509 client-certificate authentication** (§5). Verified: 7 support packages fetched unattended,
+>   all SHA-256 verified against the service. **[V]**
+> - **Authentication method decides everything.** A *browser session* download redirects into interactive
+>   SAML and needs a human (the account picker alone blocks it). A *client certificate* completes the same
+>   SAML chain non-interactively. Same URL, different outcome — see §5.
 > - **Never guess a filename or an SP level.** Resolve it from the service (§2) and quote the object key.
+> - **Verify the SHA-256 before importing, always** (§5). The service publishes it; there is no excuse for
+>   discovering a truncated `.SAR` during `IMPORT_PROPER`.
 > - **Check the component's release-strategy Note and known-issue Notes before building a queue** (§4) —
 >   locked packages and mandatory co-imports are announced there, not in the file list.
-> - Verify the **SHA-256** after download (§5). A truncated `.SAR` fails at SPAM import, hours later.
 
 Verification legend: **[V]** verified against the live service during authoring · **[G]** cited to the
 official guide/Note.
@@ -64,7 +68,8 @@ Full endpoint reference, entity sets and field lists: **[references/software-cen
 
 ## 2. Resolve a component to real files (read-only)
 
-Run these from a browser tab **on the `launchpad.support.sap.com` origin** so the session cookie applies.
+Run these either from a browser tab **on the `launchpad.support.sap.com` origin** (so the session cookie
+applies — the shell's own origin will not work, see §1), or headless with **client-certificate auth** (§5).
 
 **Search** — `SEARCH_STRING` takes what you'd type in the UI: **[V]**
 
@@ -126,17 +131,21 @@ you generally need every SP between current and target.
 
 **Worked example — ST-PI 740, installed SP28 → latest.** Resolved live: **[V]**
 
-| SP | File | Key | Size | SPAM | EPS `.PAT` |
-|---|---|---|---|---|---|
-| 0029 | `SAPK-74029INSTPI` | `0010000000024712025` | 18.4 MB | 0081 | `I710020751258_0169864.PAT` |
-| 0030 | `SAPK-74030INSTPI` | `0010000000213932025` | 5.1 MB | 0081 | `I720020751259_0170639.PAT` |
-| 0031 | `SAPK-74031INSTPI` | `0010000000642592025` | 7.0 MB | 0081 | `I710020751258_0172948.PAT` |
-| 0032 | `SAPK-74032INSTPI` | `0010000000952762025` | 2.7 MB | 0081 | — |
-| 0033 | `SAPK-74033INSTPI` | `0010000001271602025` | — | 0081 | — |
-| 0034 | `SAPK-74034INSTPI` | `0010000000129182026` | — | 0081 | — |
-| 0035 | `SAPK-74035INSTPI` | `0010000000343432026` | 11.4 MB | 0081 | `I710020751258_0179285.PAT` |
+| SP | File | ObjectKey | Bytes (measured) | SPAM |
+|---|---|---|---|---|
+| 0029 | `SAPK-74029INSTPI` | `0010000000024712025` | 19,280,927 | 0081 |
+| 0030 | `SAPK-74030INSTPI` | `0010000000213932025` | 5,393,658 | 0081 |
+| 0031 | `SAPK-74031INSTPI` | `0010000000642592025` | 7,334,387 | 0081 |
+| 0032 | `SAPK-74032INSTPI` | `0010000000952762025` | 2,875,877 | 0081 |
+| 0033 | `SAPK-74033INSTPI` | `0010000001271602025` | 6,696,119 | 0081 |
+| 0034 | `SAPK-74034INSTPI` | `0010000000129182026` | 5,412,413 | 0081 |
+| 0035 | `SAPK-74035INSTPI` | `0010000000343432026` | 11,923,989 | 0081 |
 
-All seven `AVAILABLE`, **56.2 MB** total, all requiring **SPAM/SAINT 0081**.
+All seven `AVAILABLE`; **58,917,370 bytes** total; all requiring **SPAM/SAINT 0081**. Downloaded unattended
+via certificate auth and **every SHA-256 matched `ObjectSet.Checksum`**. **[V]**
+
+Note the `ObjectSet.FileSize` field is KB and rounds — SP29 reports `18830` KB against 19,280,927 actual
+bytes. Use it for planning, use `Checksum` for verification.
 
 ---
 
@@ -167,11 +176,45 @@ tells you SP29 cannot travel alone.
 
 ### Download
 
-- **Single file** — open `https://softwaredownloads.sap.com/file/<ObjectKey>` in your browser. SAML SSO
-  applies; if your e-mail maps to several S-users you'll get an account picker. **[V]**
-- **Multiple files** — use the **Download Basket** and the **SAP Download Manager**. The basket is the
-  canonical multi-file path and survives interrupted transfers. (`DownloadBasketItemSet` exposes its
-  contents read-only. **[V]**)
+The URL is always `https://softwaredownloads.sap.com/file/<ObjectKey>`. What differs is **how you
+authenticate**, and that decides whether a human is required.
+
+| Credential | Behaviour | Use for |
+|---|---|---|
+| **Browser session** (cookies) | Redirects into interactive SAML; an account picker appears when one e-mail maps to several S-users. **Needs a human.** | Ad-hoc, one file |
+| **X.509 client certificate** | Completes the same SAML chain **non-interactively**. | Automation, bulk, CI |
+| Download Basket + SAP Download Manager | SAP's own multi-file tool; resumable | Very large media sets |
+
+**The certificate path, verified end to end.** Download an SAP passport / support certificate for your
+S-user, then present it. The chain is three hops and needs nothing but a cookie jar: **[V]**
+
+1. `GET /file/<key>` → 302 to `origin-az.softwaredownloads.sap.com/tokengen/?file=<key>`, which returns an
+   HTML **auto-POST form** carrying `SAMLRequest` + `RelayState`.
+2. **POST those to `https://accounts.sap.com/saml2/idp/sso`.** With the certificate the IdP authenticates
+   silently and returns a second auto-POST form containing `SAMLResponse` — *and a `downloadId`* appended
+   to the form action.
+3. **POST that back to the `tokengen` action.** The response is the file:
+   `Content-Type: application/octet-stream`.
+
+```bash
+# curl needs the cert in a config file (0600) so the passphrase never hits the process list
+umask 077
+printf 'cert-type = "P12"\ncert = "%s:%s"\n' "$PFX_PATH" "$PFX_PASS" > ~/.sapdl.cfg
+curl -K ~/.sapdl.cfg -sSL -c jar.txt -b jar.txt \
+     -o SAPK-74035INSTPI.SAR \
+     'https://softwaredownloads.sap.com/file/0010000000343432026'
+```
+
+`curl -L` alone is not enough — it follows redirects but **does not submit HTML forms**, so you must parse
+each form's `action` + `input` fields and re-POST them (2 hops). Any HTTP client works; the auth is the
+only hard part.
+
+> The **OData service in §2 accepts the same certificate**, so search → qualify → download → verify runs
+> with no browser anywhere in the loop. **[V]**
+
+**Sanity-check what you got.** A valid SAPCAR archive starts with the magic string `CAR 2.01`, and contains
+one or more `EPS/in/*.PAT` entries. Note *one or more* — `EpsFileName` from the service names one PAT, but
+archives can carry several (ST-PI 740 SP30 and SP33 each contain two). **[V]**
 
 ### Verify the checksum — always, and per OS
 
@@ -342,9 +385,16 @@ assuming this file is current.
   `SVT_SWDC_UI_SRV`). Entity sets, field lists and the `Fastkey`→URL mapping **verified live against the
   service during authoring**, signed in as an S-user with an active download profile. **[V]**
   See [references/software-center-api.md](references/software-center-api.md).
-- **[SC2]** Download endpoint `https://softwaredownloads.sap.com/file/<ObjectKey>` — **verified** to be
-  SAML-SSO-gated via `accounts.sap.com/saml2/idp/sso`; completes interactively, stalls under automation.
-  Object info page `https://me.sap.com/softwarecenter/object/<ObjectKey>`. **[V]**
+- **[SC2]** Download endpoint `https://softwaredownloads.sap.com/file/<ObjectKey>` — SP-initiated SAML via
+  `origin-az.softwaredownloads.sap.com/tokengen/` → `accounts.sap.com/saml2/idp/sso` → back to `tokengen`
+  with an IdP-minted `downloadId`. **Verified end to end with X.509 client-certificate auth**: 7 ST-PI 740
+  support packages (SP29–SP35) downloaded unattended, 58,917,370 bytes, **every SHA-256 matching
+  `ObjectSet.Checksum`**, each a valid `CAR 2.01` archive. With browser-session cookies the same URL needs a
+  human. Object info page `https://me.sap.com/softwarecenter/object/<ObjectKey>`. **[V]**
+- **[SC3]** Correction of record: an earlier revision of this skill stated the download "does not complete
+  under automation". That was generalised from a single surface (a browser extension driving a cookie
+  session) and is **wrong** — the credential, not the automation, is what gates it. Certificate auth
+  completes the chain non-interactively. **[V]**
 - **[ST1]** **SAP Note 539977** — *Release strategy for add-on ST-PI* (BC-UPG-ADDON). The component's
   release-strategy Note is the first thing to read before planning any add-on SP queue.
   https://me.sap.com/notes/539977

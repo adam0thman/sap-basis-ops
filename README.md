@@ -161,8 +161,9 @@ Phases 1 & 2 complete — 14 skills.
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
 - ✅ `sap-software-download` — SAP for Me **Software Center**: resolve a component to exact filenames,
   object keys, sizes, SHA-256 checksums, required SPAM level and EPS `.PAT` names via the Software
-  Center's own OData service; build a correct SP import queue; verify and stage per OS. Endpoints
-  verified live against the service.
+  Center's own OData service; build a correct SP import queue; verify and stage per OS. **Downloads are
+  fully scriptable with client-certificate auth** — the SAML chain is documented hop by hop and was
+  verified by fetching 7 support packages unattended, all checksums matching.
 - ✅ `sap-backup-recovery` — backup types + recovery types (most-recent / PITR / specific), log-mode
   prerequisites, and per-DB restore/recover commands (HANA/Oracle/ASE/Db2/MaxDB/SQL Server).
 

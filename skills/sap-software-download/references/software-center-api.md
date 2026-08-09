@@ -161,18 +161,57 @@ basket contents (empty array when the basket is empty). **[V]**
 | Direct file | `https://softwaredownloads.sap.com/file/<ObjectKey>` |
 | Object page | `https://me.sap.com/softwarecenter/object/<ObjectKey>` |
 
-The direct link **redirects into SAML SSO at `accounts.sap.com/saml2/idp/sso`**. Interactively this
-completes (with an account picker if the e-mail maps to several S-users) and the `.SAR` downloads. Under
-browser automation it **stalls on the IdP spinner and does not complete** — reproduced twice, on a session
-whose `DownloadAuthProfileSet` showed `Active: true`, so this is the SSO flow and **not** an entitlement
-problem. **[V]**
+The direct link **redirects into SP-initiated SAML at `accounts.sap.com/saml2/idp/sso`**. Whether that
+needs a human depends entirely on the **credential presented**: **[V]**
 
-Treat the direct link as **navigation for a human**. For multi-file sets use the **Download Basket** and the
-**SAP Download Manager**.
+| Credential | Result |
+|---|---|
+| Browser session cookies | Interactive SAML. Stalls under browser automation (reproduced twice on a session whose `DownloadAuthProfileSet` showed `Active: true` — so it is the SSO flow, not entitlement). Account picker appears when one e-mail maps to several S-users. |
+| **X.509 client certificate** | **Silent authentication; file returned.** Verified: 7 packages, 58,917,370 bytes, every SHA-256 matching the service. |
 
-> This mirrors the TCI package behaviour documented in
-> [sap-security-patch](../../sap-security-patch/SKILL.md): SAP's download endpoints are consistently
-> SSO-gated, so URLs are for handing to a person, not for fetching programmatically.
+### The chain, hop by hop (cert auth) **[V]**
+
+```
+GET  https://softwaredownloads.sap.com/file/<key>
+  → 302 https://origin-az.softwaredownloads.sap.com/tokengen/?file=<key>
+       200 text/html  ~12.8 KB  — auto-POST form
+       action = https://accounts.sap.com/saml2/idp/sso
+       fields = RelayState (~126 B), SAMLRequest (~11.7 KB)
+
+POST https://accounts.sap.com/saml2/idp/sso
+       200 text/html  ~28.2 KB  — auto-POST form  (cert authenticated silently)
+       action = https://origin-az.softwaredownloads.sap.com/tokengen/?file=<key>&downloadId=<uuid>
+       fields = utf8, authenticity_token (~88 B), SAMLResponse (~6.9 KB), RelayState
+
+POST <that action>
+       200 application/octet-stream   ← the .SAR
+       final url https://softwaredownloads.sap.com/?file=<key>&downloadId=<uuid>&v=
+```
+
+Notes for implementers:
+
+- The `downloadId` UUID is **minted by the IdP hop** and appended to the form action — you cannot construct
+  it in advance, which is why the chain must be walked rather than short-circuited.
+- `curl -L` follows redirects but **does not submit forms**. Parse each response's `<form action>` and
+  `<input name/value>`, HTML-unescape the action, and re-POST. Two form POSTs total.
+- Carry a **cookie jar** across all hops (`-b`/`-c`).
+- The page says *"Since your browser does not support JavaScript, you must press the Continue button"* —
+  that is the no-JS fallback, and it is exactly what makes the flow scriptable.
+- Keep the P12 passphrase out of the process list: put `cert-type`/`cert` in a `0600` curl config file and
+  pass `-K`, rather than `--cert` on the command line.
+- **The OData service above accepts the same certificate**, so the entire search → qualify → download →
+  verify loop runs headless.
+
+### Verifying the artefact
+
+- SAPCAR magic: the file begins with `CAR 2.01`.
+- It contains one or more `EPS/in/<name>.PAT` entries. **`EpsFileName` from `ObjectSet` names one of them,
+  not necessarily the only one** — ST-PI 740 SP30 and SP33 each contain two PATs. **[V]**
+
+> Contrast with the **TCI transport packages** in
+> [sap-security-patch](../../sap-security-patch/SKILL.md), which were characterised as SSO-gated on the
+> basis of browser behaviour only. That conclusion should be re-tested with certificate auth before being
+> relied on — the mechanism here turned out to be scriptable once the credential changed.
 
 ---
 
