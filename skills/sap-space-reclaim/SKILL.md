@@ -280,6 +280,7 @@ These are often the quickest wins because they need no ABAP change and no archiv
 | **Work-directory traces** | `/usr/sap/<SID>/<INST>/work` — `dev_w*`, `dev_disp`, `dev_rfc*`, `stderr*` | Covered by [sap-housekeeping](../sap-housekeeping/SKILL.md); safe when the instance is stopped, or use the documented rotation |
 | **Core dumps** | same work dir, plus DB dirs — `core`, `core.<pid>` | Often gigabytes each. **Keep one** if you have an open SAP incident about the crash; otherwise delete |
 | **Old kernel directories** | `/usr/sap/<SID>/SYS/exe/...` backups taken during patching | Keep the last known-good rollback only — [sap-kernel-patch](../sap-kernel-patch/SKILL.md) |
+| **Leftover installation media** | wherever the installer staged it — e.g. `/hana/dl`, `/sapcd`, `/install` | **Frequently the largest single item on the box.** Both the downloaded `.ZIP`/`.SAR` set *and* its extraction are typically retained after go-live. Archive off-box, then remove |
 | **SUM / upgrade directories** | `/usr/sap/<SID>/SUM`, `/usr/sap/<SID>/EHPI` | Only after the upgrade is closed and the evaluation/log archive is kept |
 | **Transport leftovers** | `/usr/sap/trans/data`, `/cofiles`, `/log`, old `EPS/in` `.PAT` files | See [sap-transport-mgmt](../sap-transport-mgmt/SKILL.md); keep what the buffer still references |
 | **LSMW / data-migration extract files** | project-defined paths on the app server, often under `/usr/sap/<SID>/...` or a custom `/interface` mount | **Find them, don't assume the path** — read the LSMW project's file definitions, or `find` for the configured extension. These are frequently multi-GB one-off conversion files left after a go-live |
@@ -292,7 +293,16 @@ Finding the big ones, per platform:
 du -xh --max-depth=2 /usr/sap 2>/dev/null | sort -rh | head -30      # Linux
 du -xg /usr/sap | sort -rn | head -30                                # AIX (GB)
 find /usr/sap -xdev -type f -size +500M -exec ls -lh {} \; 2>/dev/null
-find /usr/sap -xdev -type f -name 'core*' -exec ls -lh {} \; 2>/dev/null
+
+# core dumps — MUST confirm the file really is a core dump.
+# 'core*' alone matches core.py / core.so / core.rb and yields a fake finding.
+find / -xdev -type f \( -name 'core' -o -name 'core.[0-9]*' \) \
+     -exec sh -c 'file -b "$1" | grep -q "core file" && ls -lh "$1"' _ {} \; 2>/dev/null
+
+# leftover installation media — usually the single biggest OS-layer win
+du -xsh /hana/dl /sapdb /sapcd /install /stage 2>/dev/null | sort -rh
+find / -xdev -type f \( -name '*.ZIP' -o -name '*.SAR' \) -size +1G \
+     -printf '%10.1f GB  %TY-%Tm-%Td  %p\n' 2>/dev/null | sort -rn | head -20
 ```
 ```powershell
 # Windows
@@ -490,6 +500,15 @@ assuming this file is current.
   logon-client-only visibility (`OPTION_NOT_VALID` when filtering `MANDT`), `DATA_BUFFER_EXCEEDED` without
   a field list, `ROWSKIPS` paging exhausting the work process on `DBTABLOG`, and `LIKE 'SAP\_%'` silently
   matching nothing.
+- **[TEST-OS]** Live OS-layer validation **[V]** — same S/4HANA sandbox, root over SSH (SLES 15-SP3,
+  single-host app+HANA). Findings that changed §7: **leftover installation media dominated everything** —
+  `/hana/dl` held **351 GB** dated Sep–Oct 2023, being five install `.ZIP` files (~187 GB) *plus* the
+  extracted `FAA/` media (~176 GB) *plus* SWPM — i.e. both the archive and its extraction retained after
+  go-live, on a 1 TB filesystem sitting at 71 %. By contrast HANA trace was 2.7 GB (285 files) and the D00
+  work directory 1.7 GB. **The `find -name 'core*'` command previously given in §7 was wrong**: it matched
+  `core.py`, `core.so` and `core.rb`, reporting 39 "core dumps" totalling 0.7 MB where a `file`-type check
+  confirmed **zero** real ELF core dumps. The pattern now requires a `file -b … | grep 'core file'`
+  confirmation, and installation media is called out as its own row.
 - **[JOBS]** **SAP Note 16083** — *Standard jobs, reorganization jobs* — the recurring-job baseline. If the
   standard jobs are not scheduled, scheduling them is the durable fix rather than a one-off deletion; see
   [sap-housekeeping](../sap-housekeeping/SKILL.md). **SAP Note 2190119** covers the S/4HANA technical job
