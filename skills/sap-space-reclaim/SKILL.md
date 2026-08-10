@@ -265,13 +265,32 @@ These are often the quickest wins because they need no ABAP change and no archiv
 | DB | Reclaimable | Caution |
 |---|---|---|
 | **Oracle** | `saptrace` (`diag/rdbms/.../trace`), **audit files** in `adump`, old `alert_<SID>.log`, ADR incidents | Purge with **ADRCI**, respect audit retention |
-| **HANA** | trace files (`/usr/sap/<SID>/HDB<nr>/<host>/trace`), old backup catalog entries, **audit log** | `ALTER SYSTEM CLEAR AUDIT LOG`; retention via `ALTER AUDIT POLICY SET RETENTION` (≥2.0 SPS04) — Notes 2159014, 2308083, 2599832, 2676016, 3084473 [G, TT] |
+| **HANA** | trace files, **`*.crashdump.*.trc`** and **`*.rtedump.*.trc`**, `.py`/`.old` diagnosis files, old backup catalog entries, **audit log** | `ALTER SYSTEM CLEAR AUDIT LOG`; retention via `ALTER AUDIT POLICY SET RETENTION` (≥2.0 SPS04) — Notes 2159014, 2308083, 2599832, 2676016, 3084473 [G, TT] |
 | **Db2** | `db2diag.log` rotation, old dump/trap files | archive-log deletion **only after** verified backup |
 | **ASE / SQL Server / MaxDB** | error/trace logs, old dumps | as above |
 
 > 🚨 **Archive/transaction logs are not housekeeping.** Never delete them on space pressure alone — they are
 > deletable only once a **verified** backup includes them. This is the single most common self-inflicted
 > data-loss incident in Basis. See [sap-backup-recovery](../sap-backup-recovery/SKILL.md).
+
+> 🧠 **"Core dump" is not one thing, and on SAP hosts it is usually not a file called `core`.** Three
+> distinct artefact families, discovered three different ways: **[V]**
+>
+> | Family | Where / how to find it | Remove with |
+> |---|---|---|
+> | **OS process cores** | governed by `/proc/sys/kernel/core_pattern`. A leading `\|` means the kernel **pipes** the core to a handler and no `core*` file is ever written | `coredumpctl` (systemd), or delete the confirmed file |
+> | **HANA crash / runtime dumps** | `*.crashdump.*.trc`, `*.rtedump.*.trc` in the HANA trace directory — **never named "core"**. Inventory them from the **`M_TRACEFILES`** system view | **`ALTER SYSTEM REMOVE TRACES`**; `ALTER SYSTEM CLEAR TRACES` clears contents [G, HDIAG] |
+> | **ABAP work-process cores** | the instance `work` directory, only when `core_pattern` is a plain filename | delete the confirmed file |
+>
+> **HANA diagnosis-file rules** — `.py` (SQL/server traces) and `.old` (previous restart) are safe to remove;
+> `.stat` are tiny placeholders; but **`py.sap<SID>_HDB<nr>` and `hdb.sap<SID>_HDB<nr>` must NOT be removed**
+> — they link to the Python runtime and the `hdbdaemon`. `dev_webdisp` / `dev_icm_sec` / `icm_port_list` are
+> removable only while the system is down. **SAP Note 2370780** is explicit that it *"is not a confirmation
+> to delete any file"* — confirm per file. [G, HDIAG]
+>
+> **Automate it rather than repeating it:** **SAP HANACleaner** (**SAP Note 2399996**) is the supported way to
+> put HANA diagnosis-file cleanup on a retention schedule — the HANA-side equivalent of the ABAP standard
+> jobs in SAP Note 16083. [G, HCLEAN]
 
 ### OS-layer files
 
@@ -294,9 +313,17 @@ du -xh --max-depth=2 /usr/sap 2>/dev/null | sort -rh | head -30      # Linux
 du -xg /usr/sap | sort -rn | head -30                                # AIX (GB)
 find /usr/sap -xdev -type f -size +500M -exec ls -lh {} \; 2>/dev/null
 
-# core dumps — MUST confirm the file really is a core dump.
-# 'core*' alone matches core.py / core.so / core.rb and yields a fake finding.
-find / -xdev -type f \( -name 'core' -o -name 'core.[0-9]*' \) \
+# core dumps — DO NOT guess the filename. Ask the kernel what it produces:
+cat /proc/sys/kernel/core_pattern      # '|/usr/lib/systemd/...' = piped to a handler, NOT a core* file
+cat /proc/sys/kernel/core_uses_pid     # 1 appends .<pid>
+ulimit -c                              # 0 = no cores produced at all
+
+# (a) piped to systemd-coredump  -> they are NOT in the work dir under any name
+coredumpctl list --no-pager 2>/dev/null | tail -20
+du -sh /var/lib/systemd/coredump 2>/dev/null      # core.<comm>.<uid>.<boot>.<pid>.<time>.zst
+
+# (b) plain core_pattern -> confirm by TYPE, never by name
+find / -xdev -type f -size +10M \
      -exec sh -c 'file -b "$1" | grep -q "core file" && ls -lh "$1"' _ {} \; 2>/dev/null
 
 # leftover installation media — usually the single biggest OS-layer win
@@ -509,6 +536,20 @@ assuming this file is current.
   `core.py`, `core.so` and `core.rb`, reporting 39 "core dumps" totalling 0.7 MB where a `file`-type check
   confirmed **zero** real ELF core dumps. The pattern now requires a `file -b … | grep 'core file'`
   confirmation, and installation media is called out as its own row.
+- **[HDIAG]** **SAP Note 2370780** — *How-To: Delete old HANA diagnosis files* (HAN-DB, v6, 2023-12-28).
+  **[V]** Source for the per-extension rules (`.py`, `.old`, `.stat` removable; **`py.sap<SID>_HDB<nr>` and
+  `hdb.sap<SID>_HDB<nr>` must not be** — they link to the Python runtime and `hdbdaemon`), for
+  `dev_webdisp`/`dev_icm_sec`/`icm_port_list` being removable only while down, for **`M_TRACEFILES`** as the
+  inventory view, and for **`ALTER SYSTEM REMOVE TRACES`** / **`ALTER SYSTEM CLEAR TRACES`**. Carries the
+  explicit caveat that it *"is not a confirmation to delete any file from the system"*.
+  https://me.sap.com/notes/2370780
+- **[HCLEAN]** **SAP Note 2399996** — *How-To: Configuring automatic SAP HANA Cleanup with SAP HANACleaner*
+  — the supported retention/automation path for HANA diagnosis files. https://me.sap.com/notes/2399996
+- **[CORE]** Core-dump taxonomy **[V]** — established live: the test host's
+  `/proc/sys/kernel/core_pattern` was `|/usr/lib/systemd/systemd-coredump …`, i.e. cores are **piped to a
+  handler and never written as `core*` files**, so *any* filename-based search finds nothing regardless of
+  pattern. The same host held 16 HANA `*.crashdump.*.trc` / `*.rtedump.*.trc` files (largest ~15 MB,
+  indexserver, 2022) which no `core` pattern would ever match. `ulimit -c` was `unlimited`.
 - **[JOBS]** **SAP Note 16083** — *Standard jobs, reorganization jobs* — the recurring-job baseline. If the
   standard jobs are not scheduled, scheduling them is the durable fix rather than a one-off deletion; see
   [sap-housekeeping](../sap-housekeeping/SKILL.md). **SAP Note 2190119** covers the S/4HANA technical job
