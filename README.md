@@ -115,6 +115,7 @@ help.sap.com sources, but they will say the currency check was skipped rather th
 sap-basis-ops/
 ├── .claude-plugin/plugin.json
 └── skills/
+    ├── sap-gui-landscape/           # SLMT + SAPUILandscape.xml, connection strings, SNC params
     ├── sap-db-command-reference/     # DB matrix: HANA, Oracle, ASE, Db2, MaxDB, SQL Server
     ├── sap-system-lifecycle/         # start / stop / restart, instance order, sapcontrol
     ├── sap-health-triage/            # is-it-up + first-response triage (+ sappfpar)
@@ -139,7 +140,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 17 skills.
+Phases 1 & 2 complete — 18 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -162,6 +163,11 @@ Phases 1 & 2 complete — 17 skills.
   modes, return codes, RDDIMPDP; STMS-preferred guidance.
 - ✅ `sap-kernel-patch` — kernel swap (SAPCAR/SAPEXE/SAPEXEDB/`saproot.sh`/`sapcpe`) + Host Agent update
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
+- ✅ `sap-gui-landscape` — central SAP GUI configuration: **SLMT** / report `RSLSMT` maintaining the SAP UI
+  Landscape XML in the database, the `SAPUILandscape.xml` / `SAPUILandscapeGlobal.xml` split, INI migration,
+  distribution by UNC or HTTP(S) with the `LandscapeFileOnServer` registry keys and their HKCU-vs-HKLM
+  precedence, plus the full connection-string EBNF (`/H/ /S/ /M/ /G/ /R/ /P/` router chains) and every
+  connection parameter including SNC (`sncon`, `sncname`, `sncqop`).
 - ✅ `sap-sscr-keys` — SSCR developer/object keys: first decides whether the system needs them at all
   (S/4HANA, BW/4HANA and AS ABAP 7.51+ do not), the 14-day post-upgrade SPAU grace window, key
   parameters and the SAP for Me SSCR service, reassignment via `RS_SSCR_KEY_UPLOAD`, and why
