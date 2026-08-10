@@ -167,7 +167,9 @@ Phases 1 & 2 complete — 18 skills.
   Landscape XML in the database, the `SAPUILandscape.xml` / `SAPUILandscapeGlobal.xml` split, INI migration,
   distribution by UNC or HTTP(S) with the `LandscapeFileOnServer` registry keys and their HKCU-vs-HKLM
   precedence, plus the full connection-string EBNF (`/H/ /S/ /M/ /G/ /R/ /P/` router chains) and every
-  connection parameter including SNC (`sncon`, `sncname`, `sncqop`).
+  connection parameter including SNC (`sncon`, `sncname`, `sncqop`). Also the Windows client-deployment
+  plane: SAPSetup (`NwSapSetup.exe` / `NwSapSetupAdmin.exe`), silent install/uninstall flags and return
+  codes, package creation, **AWUS**, Local Security Handling, and frontend SNC (`SNC_LIB`).
 - ✅ `sap-sscr-keys` — SSCR developer/object keys: first decides whether the system needs them at all
   (S/4HANA, BW/4HANA and AS ABAP 7.51+ do not), the 14-day post-upgrade SPAU grace window, key
   parameters and the SAP for Me SSCR service, reassignment via `RS_SSCR_KEY_UPLOAD`, and why

@@ -7,8 +7,12 @@ description: >-
   distributing it by UNC or HTTP/HTTPS, the LandscapeFileOnServer registry keys and their HKCU-vs-HKLM
   precedence, migration from the old INI files, and the full connection-string grammar (/H/ /S/ /M/ /G/
   /R/ /P/ router chains) plus every connection parameter including SNC (sncon, sncname, sncqop). Use for
-  "SLMT", "SAPUILandscape.xml", "distribute SAP GUI connections", "connection string", "SAP GUI for Java
-  SNC", "sncqop", "logon group not working". Cited to SAP Notes and help.sap.com.
+  Also covers Windows client deployment: SAPSetup (NwSapSetup.exe / NwSapSetupAdmin.exe), package creation
+  and silent install/uninstall flags, return codes, the Automatic Workstation Update Service (AWUS), Local
+  Security Handling, and frontend SNC configuration (SNC_LIB, SNC_LIB_64, SSF_LIBRARY_PATH, mechanism
+  prefixes). Use for "SLMT", "SAPUILandscape.xml", "distribute SAP GUI connections", "connection string",
+  "SAP GUI for Java SNC", "sncqop", "logon group not working", "NwSapSetup", "NwSapSetupAdmin", "silent
+  install SAP GUI", "AWUS", "SNC_LIB", "SNCERR_UNKNOWN_MECH". Cited to SAP Notes and help.sap.com.
 ---
 
 # SAP GUI Landscape & Connection Configuration
@@ -257,12 +261,52 @@ Windows to SAP GUI for Java.
 
 ---
 
+## 7. Deploying the client itself (Windows)
+
+The landscape file tells an installed client *where to connect*. Getting the client installed, updated and
+SNC-capable is a separate toolchain — **SAPSetup**:
+
+| Binary | Role |
+|---|---|
+| **`NwSapSetup.exe`** | workstation installer; its file version **is** the SAPSetup version |
+| **`NwSapSetupAdmin.exe`** | Installation Server admin console — packages, product/patch import, AWUS, LSH |
+| `NwCreateInstServer.exe` / `NwUpdateInstServer.exe` | create / update an installation server |
+
+```bat
+start /wait <src>\Setup\NwSapSetup.exe /package="<pkg cmd line name>" /silent && echo %ERRORLEVEL%
+NwSapSetup.exe /Silent /Uninstall /Product="<product command line name>"
+NwCreateInstServer.exe /dest="C:\MyInstServerPath" /silent
+```
+
+Three things that catch people out, each covered in full in the reference: **[V, DEPLOY]**
+
+- **Return codes are not binary.** `0` success, **`129` = reboot recommended**, **`70` = prerequisite not
+  met under `/silent`/`/nodlg` (or invalid XML)**, `4` = LSH failed. A script testing only `ERRORLEVEL 0`
+  mis-reports reboot-pending machines — and on older SAPSetup an unmet prerequisite returned `0` while
+  installing nothing.
+- **AWUS** (Automatic Workstation Update Service) auto-updates workstations from the installation server,
+  **including rebooting them unattended when no user is logged on**. It requires guest account enabled,
+  anonymous "Everyone" permissions and a **null-session-accessible share** — a security trade-off to agree
+  with whoever owns Windows hardening *before* promising it.
+- **`SNC_LIB` must match the server's `snc/gssapi_lib`**, must equal `SSF_LIBRARY_PATH`, and must be set as
+  a **real environment variable** — `SET SNC_LIB=…` in a shell changes nothing permanent. The SAP Logon
+  *SNC Name* needs **no mechanism prefix**; a wrong one gives `SNCERR_UNKNOWN_MECH`.
+
+> **SAPSetup needs the Windows optional feature `VBScript` (`vbscript.dll`)** — an optional feature since
+> **Windows 11 24H2**. Hardening that removes it breaks the installer. [V, DEPLOY]
+
+**Full reference — every command-line parameter for workstation and installation server, all return codes,
+AWUS configuration, LSH, and frontend SNC troubleshooting:
+[references/frontend-deployment.md](references/frontend-deployment.md).**
+
+---
+
 ## OS note
 
 | | |
 |---|---|
-| **Windows** | full picture — SAP Logon / Logon Pad, the registry keys above, INI migration, UNC and HTTP(S) distribution |
-| **Linux / macOS (SAP GUI for Java)** | no Windows registry: connections come from the Java client's own configuration, and the **connection string + parameter syntax in §3–4 is the SAP GUI for Java documentation**, so it applies directly. Central distribution is by pointing the client at the landscape file location |
+| **Windows** | full picture — SAP Logon / Logon Pad, the registry keys above, INI migration, UNC and HTTP(S) distribution, **plus the whole SAPSetup deployment plane (§7)** |
+| **Linux / macOS (SAP GUI for Java)** | **no SAPSetup and no registry** — the Java client ships its own installer; connections come from the Java client's own configuration, and the **connection string + parameter syntax in §3–4 is the SAP GUI for Java documentation**, so it applies directly. Central distribution is by pointing the client at the landscape file location |
 | **AIX** | SAP GUI for Java is the only client; same as Linux |
 
 **SLMT itself is OS-independent** — it is an ABAP transaction; only the *consumption* of the XML is
@@ -432,6 +476,14 @@ assuming this file is current.
   **SAP Note 2175351** (administrative core configuration file), **SAP Note 2935614** (*Server Landscape
   xml file should not have a workspace named "Local"*), **SAP Note 3458923** (*Copy connections from SAP
   GUI for Windows to SAP GUI for Java*), **SAP Note 38119** (*SAP Logon: Administration of functions*).
+
+- **[DEPLOY]** Frontend deployment sources — the **SAPSetup Guide (SAPSetup 9.0)** administration guide,
+  **SAP Note 1587566** (*Installation problems with SapSetup Version 9.0*, v206 — running release notes;
+  the VBScript requirement and the `/silent` return-code change), and **SAP Note 3606053**
+  (*SNCERR_UNKNOWN_MECH …* — the frontend `SNC_LIB` configuration rules). All **[V]**, retrieved during
+  authoring. Superseded 6.20-era switches are in **SAP Note 510048** and should not be used for current
+  releases. Detail and full citations in
+  [references/frontend-deployment.md](references/frontend-deployment.md).
 
 **To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID):
 **2075073** before any distribution change (it is revised often — v18 at time of writing), **2311166** for
