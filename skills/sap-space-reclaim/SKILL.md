@@ -262,12 +262,26 @@ These are often the quickest wins because they need no ABAP change and no archiv
 
 ### Database-layer files
 
-| DB | Reclaimable | Caution |
-|---|---|---|
-| **Oracle** | `saptrace` (`diag/rdbms/.../trace`), **audit files** in `adump`, old `alert_<SID>.log`, ADR incidents | Purge with **ADRCI**, respect audit retention |
-| **HANA** | trace files, **`*.crashdump.*.trc`** and **`*.rtedump.*.trc`**, `.py`/`.old` diagnosis files, old backup catalog entries, **audit log** | `ALTER SYSTEM CLEAR AUDIT LOG`; retention via `ALTER AUDIT POLICY SET RETENTION` (≥2.0 SPS04) — Notes 2159014, 2308083, 2599832, 2676016, 3084473 [G, TT] |
-| **Db2** | `db2diag.log` rotation, old dump/trap files | archive-log deletion **only after** verified backup |
-| **ASE / SQL Server / MaxDB** | error/trace logs, old dumps | as above |
+| DB | Discover it with | Crash artefacts are called | Retention mechanism |
+|---|---|---|---|
+| **HANA** | **`M_TRACEFILES`** view | `*.crashdump.*.trc`, `*.rtedump.*.trc` | `ALTER SYSTEM REMOVE TRACES`; **HANACleaner** (Note 2399996) [G, HCLEAN] |
+| **Oracle** | **`V$DIAG_INFO`**, `adrci> SHOW HOMES` | **`$ADR_HOME/cdump`** (was `CORE_DUMP_DEST`) | ADR auto-purge — `SHORTP_POLICY` 720h files/dumps, `LONGP_POLICY` 8760h metadata; **SAP says keep Oracle defaults** [G, ORA] |
+| **Db2** | `db2 get dbm cfg` → **`DIAGPATH`** | trap files, dumps, **`FODC_*` directories** | **`DIAGSIZE`** (rotating `db2diag.log`); `db2diag -A` |
+| **SAP ASE** | the **`-e`** flag in `RUN_<SERVER>` | shared-memory dumps, `dataserver` cores | none built in — cycle the errorlog on a schedule |
+| **MaxDB** | run directory, typically `/sapdb/data/wrk/<SID>` | `rtedump`, kernel cores | `KnlMsg` size parameter + prune `KnlMsgArchive` |
+| **SQL Server** | `-e` startup parameter / `SERVERPROPERTY('ErrorLogFileName')` | **`SQLDump####.mdmp`** / `.txt` | `sp_cycle_errorlog` + configured number of generations |
+
+**Per-database detail — paths, commands, what must never be deleted, and citation status for each:
+[references/db-diagnostic-files.md](references/db-diagnostic-files.md).**
+
+> ⚠️ **Only Oracle has a directory called `cdump`. Nobody else uses the word "core".** That is the whole
+> reason a filename search fails: the artefact you want is called `crashdump`, `FODC_*`, `SQLDump*.mdmp`
+> or `rtedump` depending on the platform. **Read the DB's diagnostic-path parameter, then list via its own
+> inventory view.** [G, ORA] **[V]** for the HANA row.
+
+> 📦 **Package before you purge.** With an open SAP/Oracle message, build the incident package first
+> (Oracle: `adrci> IPS CREATE PACKAGE INCIDENT <n>` → `IPS GENERATE PACKAGE`) — purging first destroys the
+> evidence the message depends on. [G, ORA]
 
 > 🚨 **Archive/transaction logs are not housekeeping.** Never delete them on space pressure alone — they are
 > deletable only once a **verified** backup includes them. This is the single most common self-inflicted
@@ -550,6 +564,20 @@ assuming this file is current.
   handler and never written as `core*` files**, so *any* filename-based search finds nothing regardless of
   pattern. The same host held 16 HANA `*.crashdump.*.trc` / `*.rtedump.*.trc` files (largest ~15 MB,
   indexserver, 2022) which no `core` pattern would ever match. `ulimit -c` was `unlimited`.
+- **[ORA]** **SAP Note 1431751** — *Quick Reference for ADRCI and ADR* (BC-DB-ORA, v6). **[V]** Retrieved
+  via the SAP Notes MCP during authoring. Source for: ADR replacing the deprecated `USER_DUMP_DEST` /
+  `BACKGROUND_DUMP_DEST` / `CORE_DUMP_DEST`; the SAP-specific ADR base
+  `DIAGNOSTIC_DEST = $SAPDATA_HOME/saptrace`; the ADR home layout `diag/rdbms/<db_name>/<ORACLE_SID>` with
+  `trace` / `alert` / `incident` / **`cdump`** / `hm`; **`V$DIAG_INFO`** as the discovery view; the
+  retention policy **`SHORTP_POLICY` 720 h (incident files and dumps)** and **`LONGP_POLICY` 8760 h
+  (metadata)** purged automatically by `MMON`, with *"For SAP the recommendation is to use the Oracle
+  Default settings"*; and the IPS packaging sequence. Alert-log trimming: **SAP Note 786032**.
+  https://me.sap.com/notes/1431751
+- **[DBOTHER]** Db2, SAP ASE, MaxDB and SQL Server diagnostic-file handling in
+  [references/db-diagnostic-files.md](references/db-diagnostic-files.md) is given from **vendor-documented
+  mechanisms and is explicitly marked unverified** — SAP Note searches for those platforms returned only
+  CR lists for this S-user, which is an entitlement limitation rather than evidence the Notes do not
+  exist. Confirm against the current SAP Note for your platform before acting. [G]
 - **[JOBS]** **SAP Note 16083** — *Standard jobs, reorganization jobs* — the recurring-job baseline. If the
   standard jobs are not scheduled, scheduling them is the durable fix rather than a one-off deletion; see
   [sap-housekeeping](../sap-housekeeping/SKILL.md). **SAP Note 2190119** covers the S/4HANA technical job
