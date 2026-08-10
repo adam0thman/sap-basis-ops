@@ -124,6 +124,7 @@ sap-basis-ops/
     ├── sap-space-reclaim/           # what can be deleted, retention fixes, sized reclaim
     ├── sap-dormant-clients/         # assess & retire unused clients (000/001/066, sandboxes)
     ├── sap-transport-mgmt/           # OS-layer tp / R3trans, buffer, unconditional modes
+    ├── sap-sscr-keys/               # SSCR developer & object keys (and when they're not needed)
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
     ├── sap-software-download/        # Software Center: find/qualify files, SP queues, checksums
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
@@ -138,7 +139,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 16 skills.
+Phases 1 & 2 complete — 17 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -161,6 +162,10 @@ Phases 1 & 2 complete — 16 skills.
   modes, return codes, RDDIMPDP; STMS-preferred guidance.
 - ✅ `sap-kernel-patch` — kernel swap (SAPCAR/SAPEXE/SAPEXEDB/`saproot.sh`/`sapcpe`) + Host Agent update
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
+- ✅ `sap-sscr-keys` — SSCR developer/object keys: first decides whether the system needs them at all
+  (S/4HANA, BW/4HANA and AS ABAP 7.51+ do not), the 14-day post-upgrade SPAU grace window, key
+  parameters and the SAP for Me SSCR service, reassignment via `RS_SSCR_KEY_UPLOAD`, and why
+  `DEVACCESS`/`ADIRACCESS` must never be edited by hand.
 - ✅ `sap-dormant-clients` — evidence-based dormancy assessment (RSUSR200/SUIM, ST03N settlement
   statistics, TBTCO+TBTCP job checks, last-changed dates, TAANA volumes), then safe retirement via SCC5 —
   including what SCC5 leaves behind (TemSe, T000, SAP* access) and why space needs a reorg after.
