@@ -128,6 +128,57 @@ The highest-yield Basis candidates, with how each is controlled: **[V, TT]**
 
 ---
 
+## 3a. The fastest first pass: volume vs. whether its cleanup job runs
+
+Before sizing anything precisely, do this — it takes minutes and usually explains the whole problem.
+
+**Check which cleanup reports are actually scheduled, then compare against table volume.** Job *names* vary
+by system and by SJOBREPO version, so match on the **report name in `TBTCP-PROGNAME`**, not on `TBTCO-JOBNAME`:
+
+```abap
+SE16 → TBTCP    " PROGNAME = RSBTCDEL2 / RSPO1041 / SBAL_DELETE / RSSNAPDL / RBDCPCLR / RSTBPDEL / …
+```
+
+A table that is large **and** whose report is unscheduled is a confirmed finding, not a hypothesis — and
+the fix is *schedule the job* (SAP Note 16083), not a one-off deletion.
+
+**Verified on a live S/4HANA sandbox** (SAP_BASIS 757 on HANA) during authoring — of 14 standard cleanup
+reports only **two** were scheduled, and the volumes tracked that exactly: **[V]**
+
+| Table | Rows | Cleanup report | Scheduled? |
+|---|---|---|---|
+| `BALHDR` | > 1,000,000 | `SBAL_DELETE` | **no** |
+| `BDCP2` | 198,116 | `RBDCPCLR` / `BD22` | **no** |
+| `TBTCO` | > 100,000 | `RSBTCDEL2` | **no** |
+| `TSP01` / `TST03` | > 10,000 each | `RSPO1041` | **no** |
+| `SOFFCONT1` | 1,423 | `RSBCS_REORG` | **yes** |
+| `SNAP` | 742 | `RSSNAPDL` | **yes** |
+
+The only two small tables were the only two with a running cleanup job. That correlation is the argument
+to put in front of whoever approves the work.
+
+> On **S/4HANA**, check the **technical job repository** (`SJOBREPO`, SAP Note 2190119) before scheduling
+> anything by hand — it manages many `SAP_*` jobs itself, and hand-scheduling duplicates them. In the
+> system above SJOBREPO was clearly active (`SAP_AMC_LOG_REORG`, `SAP_ADS_SPOOL_CONSISTENCY_CHECK`, …) and
+> **still** did not cover the classic reorg reports above. Presence of SJOBREPO is not coverage. **[V]**
+
+### Assessing over RFC — what works, and what will mislead you
+
+If you are driving the assessment through `RFC_READ_TABLE` rather than a GUI, four behaviours will produce
+wrong answers. All observed live: **[V]**
+
+| Behaviour | Consequence |
+|---|---|
+| **Only the logon client is visible** for client-dependent tables. Filtering on `MANDT` raises `OPTION_NOT_VALID`. | You cannot assess other clients' activity from one connection — you need a logon per client, or `ST03N`, or DB-level SQL. Client-**independent** tables (`T000`) are fine. |
+| **No field list → `DATA_BUFFER_EXCEEDED`** on any table whose row exceeds 512 bytes | "Table missing" conclusions that are simply wrong. Always name a narrow field. |
+| **Counting by paging `ROWSKIPS` is O(n) scans per page.** On a large table it can exhaust the work process — a real `DBTABLOG` probe returned *"No more memory available to add rows to an internal table"* | Do **not** count large tables over RFC. Use `DB02`/`DBACOCKPIT`, the DB-native SQL in §2, or `TAANA`. |
+| **`LIKE 'SAP\_%'` (escaped underscore) silently returns zero rows** | Reads as "no standard jobs scheduled" when they exist. Use `SAP_%` and filter client-side. |
+
+The first three are the reason §2 tells you to size at the **database** layer. RFC is good for *inventory
+and existence*, poor for *volume*.
+
+---
+
 ## 4. Retention settings worth fixing permanently
 
 A one-off delete that isn't paired with a retention fix will be repeated next year.
@@ -430,6 +481,15 @@ assuming this file is current.
 - **[HANA-AUD]** SAP HANA audit log management — `ALTER SYSTEM CLEAR AUDIT LOG`, and
   `ALTER AUDIT POLICY … SET RETENTION` from **SAP HANA 2.0 SPS 04** — SAP Notes **2159014**, **2308083**,
   **2599832**, **2676016**, **3084473**, as catalogued in SAP Note 2388483. **[V]**
+- **[TEST]** Live validation during authoring **[V]** — assessment run read-only against an S/4HANA
+  sandbox (SAP_BASIS **757**, kernel 789, HANA, client 100) over RFC. Findings that shaped §3a: only
+  `RSSNAPDL` and `RSBCS_REORG` of 14 standard cleanup reports were scheduled (matched on
+  `TBTCP-PROGNAME`), and the two tables they clean were the only small ones, while `BALHDR` (>1M),
+  `BDCP2` (198,116), `TBTCO` (>100k) and `TSP01`/`TST03` (>10k each) had no scheduled cleanup. SJOBREPO was
+  active yet did not cover those reports. Also established the four `RFC_READ_TABLE` limitations in §3a —
+  logon-client-only visibility (`OPTION_NOT_VALID` when filtering `MANDT`), `DATA_BUFFER_EXCEEDED` without
+  a field list, `ROWSKIPS` paging exhausting the work process on `DBTABLOG`, and `LIKE 'SAP\_%'` silently
+  matching nothing.
 - **[JOBS]** **SAP Note 16083** — *Standard jobs, reorganization jobs* — the recurring-job baseline. If the
   standard jobs are not scheduled, scheduling them is the durable fix rather than a one-off deletion; see
   [sap-housekeeping](../sap-housekeeping/SKILL.md). **SAP Note 2190119** covers the S/4HANA technical job
