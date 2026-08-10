@@ -1,0 +1,447 @@
+---
+name: sap-space-reclaim
+description: >-
+  Landscape space-reclamation assessment — find what can be deleted, what has a configurable retention,
+  what is self-service vs change-controlled, and how much disk you actually get back. Covers ABAP technical
+  tables (spool/TemSe, table logging, application log, job logs, dumps, IDoc/RFC queues, workload stats,
+  change documents), the Security Audit Log archive/delete path, DB-layer traces and audit files, and
+  OS-layer leftovers (work-directory traces, core dumps, old kernels, SUM directories, LSMW/extract files).
+  Sizes each candidate before and after, and is honest that deleting rows does not shrink a database
+  without reorganization. Use for "database is full", "reclaim disk", "what can we clean up", "retention
+  settings", "how much space will we save", "core dumps", "DBTABLOG huge", "TST03 huge". Cited to SAP Notes.
+---
+
+# Space Reclamation Assessment
+
+Two different jobs get confused here. **[sap-housekeeping](../sap-housekeeping/SKILL.md)** keeps a healthy
+system healthy — the standard reorganization jobs that should already be running. **This** skill is the
+*assessment and one-off reclamation project*: the system is already large, and someone needs a costed,
+evidence-backed list of what can go.
+
+> **Guardrail — measure, then propose, then delete.**
+> - **Never delete before sizing.** Every candidate gets a *current size* and an *estimated reclaim* (§2),
+>   because effort is only justified by the number.
+> - **Deleting rows ≠ free disk.** On most databases the space stays inside the datafile/datavolume as
+>   reusable space. **Reorganization is a separate, usually disruptive step** (§6). Say this out loud in
+>   every estimate, or the reported "saving" is fiction.
+> - **Retention is a setting, not a delete.** Where a retention parameter exists, *fixing the setting* is
+>   the durable win; a one-off deletion just restarts the clock (§3, §4).
+> - **Logs may be legally retained.** The Security Audit Log especially — archive and verify readability
+>   *before* deletion, never delete immediately (§5). [G, SAL]
+> - **PRD: typed confirmation per object**, and prefer the standard job/report over ad-hoc SQL always.
+>   Never `DELETE`/`TRUNCATE` an SAP table directly unless a Note explicitly says so for that table.
+
+Verification legend: **[V]** verified during authoring · **[G]** cited to an SAP Note or guide.
+
+Full per-table catalogue: **[references/reclaimable-inventory.md](references/reclaimable-inventory.md)**
+
+---
+
+## 1. Scope the assessment
+
+Work the four layers in this order — the answer is usually concentrated in one of them.
+
+| Layer | Typical big-ticket items |
+|---|---|
+| **1. ABAP technical tables** | spool/TemSe, table logging, application log, job logs, IDocs, RFC queues, workload stats, change docs |
+| **2. Application data** | archiving objects via **SARA** — out of scope here, needs business sign-off |
+| **3. Database layer** | traces, audit files, dumps, old backups/archive logs, HANA audit log |
+| **4. OS layer** | work-dir traces, core dumps, old kernel dirs, SUM dirs, extract/LSMW files |
+
+**Dormant clients** are often the single largest line item and get their own skill —
+[sap-dormant-clients](../sap-dormant-clients/SKILL.md).
+
+---
+
+## 2. Size it first — find where the space actually is
+
+Never start from a list of "things you can clean". Start from **what is big in this system**.
+
+**SAP-provided SQL to find the largest technical tables** — the fastest route: [G, TT]
+
+| DB | Statement | Delivered in |
+|---|---|---|
+| **HANA** | `HANA_Tables_LargestTables` with `ONLY_TECHNICAL_TABLES 'X'` | **SAP Note 1969700** |
+| **Oracle** | `Space_LargestTables` with `ONLY_BASIS_TABLES 'X'` | **SAP Note 1438410** |
+
+Otherwise, per-DB size views: **`DB02`** / **`DBACOCKPIT`** → space → largest tables/segments. Per-database
+specifics in [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
+
+**Then quantify what a retention cut-off would actually remove.** Use **`TAANA`** (table analysis) to count
+rows grouped by a date field and/or `MANDT` — that converts "DBTABLOG is 300 GB" into "260 GB of it is older
+than 2 years". [G, TT]
+
+```
+TAANA → create analysis variant on the date/client field → run in background → read the distribution
+```
+
+**Estimated reclaim = rows outside the retention × average row size.** Get average row size from the DB's
+own statistics (`DB02`/`DBACOCKPIT`), not by guessing.
+
+> Record for each candidate: **current size**, **rows outside retention**, **estimated reclaim**, **method**,
+> **retention setting available?**, **self-service or change-controlled?**. That table *is* the deliverable.
+
+---
+
+## 3. Layer 1 — ABAP technical tables
+
+The authoritative, continuously-updated catalogue is **SAP Note 2388483** (*How-To: Data Management for
+Technical Tables*) — it maps table → area → SAP Notes → the transaction/report that cleans it, for **all**
+databases. Treat it as the source of truth and this section as the Basis-relevant extract. [G, TT]
+
+The highest-yield Basis candidates, with how each is controlled: **[V, TT]**
+
+| Data | Tables | Clean with | Retention configurable? |
+|---|---|---|---|
+| **Spool / TemSe** | `TSP01`, `TSP02`, `TST01`, `TST03`, `TSPADS`, `TSPEVJOB` | `RSPO0041`, `RSPO1041`, `RSPO1043`, `RSBTCDEL2`, `RSBDCREO` — Note 48400 | **Yes** — spool retention period per request |
+| **Table logging** | `DBTABLOG`, `DBTABPRT` | **`SCU3`**, report **`RSTBPDEL`** — Notes 2335014, 2362854 | **Yes** — `rec/client` + per-table log flag |
+| **Application log** | `BALDAT`, `BALHDR`, `BALC`, `BAL_INDX`, `BALM`, … | **`SLG2`**, `SBAL_DELETE`, `SBAL_DELETE_ORPHAN_MESSAGES`, `SBAL_STATISTICS` — Notes 195157, 2057897, 3039724, 3742661 | **Yes** — expiry date set by the writing application |
+| **Job logs / jobs** | `TBTCO`, `TBTCP`, `TBTCS`, `TBTCJOBLOG*` | `RSBTCDEL2`, `RSBTCCNS` — Notes 16083, 666290, 1440439, 2360818 | Via job-log retention |
+| **ABAP short dumps** | `SNAP` | **`RSSNAPDL`** — Note 11838 | **Yes** — `rdisp/max_snapshots`-style + job variant |
+| **IDocs** | `EDIDC`, `EDID4`, `EDIDS`, `EDI30C`, `EDI40` | `RSEXARCA/B/D/L/R`, `RSETESTD` — Notes 40088, 1574016 | Archiving (SARA) |
+| **RFC / qRFC queues** | `ARFCSDATA`, `ARFCRSTATE`, `ARFCSSTATE`, `TRFCQIN`, `TRFCQOUT`, `TRFCQDATA`, `TRFCQSTATE` | **`SM58`**, **`SMQ1`**, **`SMQ2`** — Note 375566 | No — these are *stuck entries*, investigate before deleting |
+| **RFC logging** | `ARFCLOG` | `RSARFCLE`, `RSARFCLR` — Notes 802062, 2363550 | **Yes** |
+| **Workload statistics** | `SWNCMONI`, `SWNCM_TIMES`, `SWNCM_*` | **`ST03`** — **adjustment of retention times** — Note 2274315 | **Yes — this is a pure retention setting** |
+| **Change documents** | `CDHDR`, `CDPOS`, `CDPOS_STR`, `CDPOS_UID` | **`SARA`**, archiving object **`CHANGEDOCU`** — Note 3015823 | Archiving residence time |
+| **Batch input** | `APQD`, `APQI` | **`SM35`**, `RSBDCREO` — Note 36781 | **Yes** |
+| **SAPoffice** | `SOFFCONT1`, `SOC3`, `SOOD`, `SOST`, … | `RSBCS_REORG` — Notes 966854, 1641830 | **Yes** |
+| **ALE change pointers** | `BDCP`, `BDCPS`, `BDCP2` | **`BD22`**, `RBDCPCLR` — Note 513454 | **Yes** |
+| **Work items / workflow** | `SWWWIHEAD`, `SWWLOGHIST`, `SWW_CONT`, … | `RSWWHIDE`, `RSWWWIDE`, `RSWWWIDE_DEP` — Notes 49545, 1552169 | Archiving |
+| **Object links** | `SRRELROLES`, `IDOCREL`, `SMW0REL` | `RSRLDREL` — Notes 493156, 505608 | No |
+| **Table analysis results** | `TAAN_*`, `ARDB_STAT*` | `TAAN_DELETE_ANALYSES` — Note 2034063 | No — delete your own leftovers |
+| **Snapshot monitor** | `/SDF/MON`, `/SDF/SMON_CLUST` | **`/SDF/SMON`** — Note 2651881 | **Yes** |
+| **eCATT logs** | `ECLOG_*` | `RSECATTLOGDEL`, archiving object `ECATT_LOG` — Note 1052908 | **Yes** |
+| **Enhancement logs** | `ENHLOG` | `ENH_SHRINK_ENHLOG` — Note 2229441 | No |
+| **Buffer sync** | `DDLOG` | **TRUNCATE allowed — only while ABAP is stopped** — Note 36283 | n/a |
+
+> ⚠️ **`DDLOG` is the exception that proves the rule.** It is one of the very few tables SAP permits you to
+> truncate directly, **and only with the ABAP stack down**. Do not generalise from it. [G, TT]
+
+**Self-service vs change-controlled** — a useful split when proposing work:
+
+- **Self-service, low risk:** `RSSNAPDL`, `RSPO1041`/`RSPO0041`, `RSBTCDEL2`, `RSBDCREO`, `SBAL_DELETE`,
+  `RSARFCLE`, `TAAN_DELETE_ANALYSES`, ST03 retention adjustment. These are the standard housekeeping jobs —
+  if they are not scheduled, scheduling them per **SAP Note 16083** is the fix, not a one-off deletion.
+- **Change-controlled:** anything using **SARA** (archiving — needs business sign-off and an archive store),
+  table-logging scope changes (`rec/client`), and anything touching RFC queues (stuck entries may be
+  business data in flight).
+
+---
+
+## 4. Retention settings worth fixing permanently
+
+A one-off delete that isn't paired with a retention fix will be repeated next year.
+
+| Area | Setting | Where |
+|---|---|---|
+| Table logging scope | **`rec/client`** (`OFF` / `ALL` / client list) + per-table *log data changes* flag | Profile + `SE13` / `SCU3` |
+| Workload statistics | retention per aggregation level | **`ST03`** → workload collector settings — Note 2274315 |
+| Spool | retention period, auto-delete of old requests | Spool admin + `RSPO1041` variant |
+| Job logs | job-log retention | `RSBTCDEL2` variant |
+| Short dumps | keep-days | `RSSNAPDL` variant |
+| Security Audit Log | recording target + retention/archive mode | **`RSAU_CONFIG`** (§5) |
+| HANA audit log | `ALTER AUDIT POLICY SET RETENTION` (HANA ≥ 2.0 SPS04) | HANA SQL — Notes 2159014, 2308083, 3084473 |
+
+**Schedule the standard jobs.** SAP Note **16083** defines the standard reorganization job set; SAP Note
+**2190119** covers the S/4HANA **technical job repository** (`SJOBREPO`), which schedules many of these for
+you — verify it is active before hand-rolling jobs. [G, TT]
+
+---
+
+## 5. Security Audit Log — archive before you delete
+
+SAL is the one that gets people into trouble, because it is both large and legally sensitive.
+
+First establish **how it is recorded** — **`RSAU_CONFIG`** → *Parameters* → **Recording Target** and
+**Recording Type**. The cleanup path depends entirely on this: [G, SAL]
+
+| Recording target / type | Cleanup path |
+|---|---|
+| **File** | reorganize old audit **files** (`RSAU_ADMIN` → *Reorganize log files*) |
+| **Database**, *Audit Log with Archive Interface* | **archive then delete** — the procedure below |
+| **Database**, *Audit Log with Retention Management* | retention-driven; the archive procedure does **not** apply |
+| **Database**, *Persistency in external system (API mode)* | may allow direct deletion; if reorganization is blocked, implement **SAP Note 3346306** |
+
+**Archive-then-delete (DB + archive interface), tables `RSAU_BUF_DATA` / `RSAU_LOG`:** [G, SAL]
+
+1. **`RSAU_ADMIN`** → *Reorganize log table* → **Archive** → opens **`SARA`** with archiving object **`BC_SAL`**.
+2. In *Customizing → Archiving Object-Specific Customizing → Technical settings*, set delete jobs to
+   **Not Scheduled** (recommended) so deletion stays manual.
+3. Define a **write variant** (e.g. keep 1 year), set start date and spool parameters, schedule.
+   Job **`ARV_BC_SAL_WRI*`** appears in `SM37`.
+4. **The archive file exists but nothing is deleted yet.** Run the **Delete** step against the archive file
+   — job **`ARV_BC_SAL_DEL*`**.
+
+> 🔒 **Never delete immediately.** SAP's own guidance: audit logs carry legal retention obligations —
+> **verify the archive file is complete and readable before deleting**. Use the **"Delete with Test
+> Variant"** checkbox on `RSAU_ARCHIVE_WRITE` to preview exactly what would be removed. [G, SAL]
+
+Requires **SAP_BASIS 7.50 SP03+** (the RSAU_* generation — see
+[sap-security-patch](../sap-security-patch/SKILL.md) and
+[sap-log-reference](../sap-log-reference/SKILL.md)). If `RSAU_ADMIN` shows the tables as empty while the DB
+says otherwise, that is **SAP Note 3467895**. [G, SAL]
+
+---
+
+## 6. Making the space actually appear
+
+**This is the step that turns a row count into free disk, and it is the step most often skipped.**
+
+| DB | Why deleted rows don't free space | Reclamation |
+|---|---|---|
+| **Oracle** | space stays in the segment/tablespace as free extents | reorg with **BR\*Tools** — Notes **646681**, **541538**; *Segment Management with BR\*Tools* |
+| **SAP HANA** | row-store needs reorg; column-store needs **delta merge** + compression; persistence needs a **data volume shrink** | merge/compress, then reclaim data volume |
+| **IBM Db2** | space stays in the tablespace | `REORG` + `ALTER TABLESPACE … REDUCE` |
+| **SAP ASE** | pages remain allocated | `reorg rebuild` / shrink |
+| **SQL Server** | pages remain allocated | index rebuild / `DBCC SHRINKFILE` (with care) |
+| **MaxDB** | | reorganize/compress |
+
+Per-DB commands and their guardrails: [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
+Reorganization is **resource-intensive and usually needs a window** — plan it as its own change, and take a
+backup first ([sap-backup-recovery](../sap-backup-recovery/SKILL.md)).
+
+Search the reorganization Note for **your** DB component: `BC-DB-ORA`, `BC-DB-HDB`, `BC-DB-DB6`,
+`BC-DB-MSS`, `BC-DB-SDB`, `BC-DB-INF`. [G, RM]
+
+---
+
+## 7. Layers 3 & 4 — database and OS files
+
+These are often the quickest wins because they need no ABAP change and no archiving.
+
+### Database-layer files
+
+| DB | Reclaimable | Caution |
+|---|---|---|
+| **Oracle** | `saptrace` (`diag/rdbms/.../trace`), **audit files** in `adump`, old `alert_<SID>.log`, ADR incidents | Purge with **ADRCI**, respect audit retention |
+| **HANA** | trace files (`/usr/sap/<SID>/HDB<nr>/<host>/trace`), old backup catalog entries, **audit log** | `ALTER SYSTEM CLEAR AUDIT LOG`; retention via `ALTER AUDIT POLICY SET RETENTION` (≥2.0 SPS04) — Notes 2159014, 2308083, 2599832, 2676016, 3084473 [G, TT] |
+| **Db2** | `db2diag.log` rotation, old dump/trap files | archive-log deletion **only after** verified backup |
+| **ASE / SQL Server / MaxDB** | error/trace logs, old dumps | as above |
+
+> 🚨 **Archive/transaction logs are not housekeeping.** Never delete them on space pressure alone — they are
+> deletable only once a **verified** backup includes them. This is the single most common self-inflicted
+> data-loss incident in Basis. See [sap-backup-recovery](../sap-backup-recovery/SKILL.md).
+
+### OS-layer files
+
+| Item | Where | Notes |
+|---|---|---|
+| **Work-directory traces** | `/usr/sap/<SID>/<INST>/work` — `dev_w*`, `dev_disp`, `dev_rfc*`, `stderr*` | Covered by [sap-housekeeping](../sap-housekeeping/SKILL.md); safe when the instance is stopped, or use the documented rotation |
+| **Core dumps** | same work dir, plus DB dirs — `core`, `core.<pid>` | Often gigabytes each. **Keep one** if you have an open SAP incident about the crash; otherwise delete |
+| **Old kernel directories** | `/usr/sap/<SID>/SYS/exe/...` backups taken during patching | Keep the last known-good rollback only — [sap-kernel-patch](../sap-kernel-patch/SKILL.md) |
+| **SUM / upgrade directories** | `/usr/sap/<SID>/SUM`, `/usr/sap/<SID>/EHPI` | Only after the upgrade is closed and the evaluation/log archive is kept |
+| **Transport leftovers** | `/usr/sap/trans/data`, `/cofiles`, `/log`, old `EPS/in` `.PAT` files | See [sap-transport-mgmt](../sap-transport-mgmt/SKILL.md); keep what the buffer still references |
+| **LSMW / data-migration extract files** | project-defined paths on the app server, often under `/usr/sap/<SID>/...` or a custom `/interface` mount | **Find them, don't assume the path** — read the LSMW project's file definitions, or `find` for the configured extension. These are frequently multi-GB one-off conversion files left after a go-live |
+| **Interface in/out directories** | custom mounts used by `OPEN DATASET` / file interfaces | Owned by applications — confirm the owner before deleting |
+
+Finding the big ones, per platform:
+
+```bash
+# Linux / AIX — as <sid>adm; largest files under the SAP mounts
+du -xh --max-depth=2 /usr/sap 2>/dev/null | sort -rh | head -30      # Linux
+du -xg /usr/sap | sort -rn | head -30                                # AIX (GB)
+find /usr/sap -xdev -type f -size +500M -exec ls -lh {} \; 2>/dev/null
+find /usr/sap -xdev -type f -name 'core*' -exec ls -lh {} \; 2>/dev/null
+```
+```powershell
+# Windows
+Get-ChildItem -Path E:\usr\sap -Recurse -File -ErrorAction SilentlyContinue |
+  Sort-Object Length -Descending | Select-Object -First 30 FullName,@{n='GB';e={[math]::Round($_.Length/1GB,2)}}
+```
+
+> **Read-only first.** Everything above is discovery. Deleting comes after the sized proposal is approved,
+> and never with a wildcard on a path you have not listed first.
+
+---
+
+## 8. The deliverable
+
+A space-reclamation assessment is not a list of transactions — it is a **costed table**:
+
+| Candidate | Current | Est. reclaim | Method | Retention fix | Risk | Needs reorg? |
+|---|---|---|---|---|---|---|
+| `DBTABLOG` | 310 GB | 265 GB | `RSTBPDEL` + fix `rec/client` | yes | low | yes |
+| `TST03` (TemSe) | 90 GB | 80 GB | `RSPO1041` + spool retention | yes | low | yes |
+| Client 001 | 40 GB | 40 GB | `SCC5` | n/a | medium | yes |
+| core dumps | 22 GB | 22 GB | OS delete | n/a | low | **no — immediate** |
+
+Note the last column: **OS-layer deletions return space immediately; database deletions do not.** Lead the
+proposal with the OS-layer wins for that reason, then the retention fixes, then anything needing a
+reorganization window.
+
+---
+
+## OS note
+
+Layers 1–3 are **OS-independent** (ABAP transactions and DB commands). Layer 4 is where platform matters —
+the discovery commands above are given for **Linux, AIX and Windows**, and `du` differs between Linux
+(`--max-depth`, `-h`) and AIX (`-g`, no `--max-depth`). Path layout is identical in shape
+(`/usr/sap/<SID>/<INST>/work`) with Windows using a drive letter and UNC paths for `sapmnt`.
+
+---
+
+## Execution discipline (non-negotiable)
+
+### The holy rule — nothing runs unbacked
+
+**Every command executed must be traceable to one of exactly three things:**
+
+1. an **official SAP source** — help.sap.com page / Operations or Administration Guide, or
+2. an **SAP Note / KBA**, or
+3. an **explicit instruction from the user**.
+
+If a command is backed by none of those, **do not run it** — say what backing is missing and stop.
+"It's probably fine", "this is standard", and "I recall the syntax" are not backing. When the backing is
+a source, name it (page or Note number) alongside the command; when it is the user, quote the instruction.
+
+### Ambiguity ⇒ stop and confirm, before any execution
+
+If executing would require **assuming** anything the user did not state, you are **obliged** to confirm
+first. Never fill a gap with a plausible default. Common gaps that force a stop:
+
+- **client number**, SID, instance number, target host/node
+- **read-only vs state-changing** — if it is not explicit which was wanted, ask
+- **scope** — one instance vs the whole system, one tenant vs all, one client vs cross-client
+- which **database / dbms_type**, which environment (**PRD vs non-PRD**)
+- retention/age cut-offs, recovery points, target of a restore, transport target
+
+A wrong assumption here is not a typo — it is the difference between reading a log and stopping production.
+
+### But verify programmatically FIRST — *then* ask
+
+**Asking the user for something the system can answer is a failure.** Before you raise a question, ask
+the user to go and look, or request Computer Use / GUI access, you **must** first try to determine it
+programmatically. Only what genuinely cannot be derived — intent, authorization, a business decision, a
+value that exists only in the user's head — is a legitimate question.
+
+| Determine programmatically (do NOT ask) | Ask the user (cannot be derived) |
+|---|---|
+| Which DB — `echo $dbms_type`, profile `dbms/type` | Which **client** to act on |
+| SIDs / instances / hosts / ports — `sapcontrol … GetSystemInstanceList`, `ls /usr/sap` | Whether this system is in scope / approved |
+| Is it up, is the DB up — `GetProcessList`, `R3trans -d` | PRD change approval, downtime window |
+| Kernel / release / patch — `disp+work -version`, `saphostexec -version` | The intended recovery point or retention policy |
+| Which clients **exist** — table `T000` | Which of those clients is **meant** |
+| Free space, log locations, parameter values — `df -h`, `sappfpar`, profile | Business impact / urgency |
+
+Order, always: **verify programmatically → ask only what remains → never assume.**
+
+### Prefer programmatic over manual or GUI
+
+If a task can be done via **CLI, API, SQL or a report**, do it that way rather than GUI clicks, screen
+automation or Computer Use. Programmatic execution is repeatable, reviewable, loggable and diffable;
+screen-driving is none of those. Reach for the GUI or Computer Use only when there is **no programmatic
+path** (some SAP GUI-only transactions genuinely qualify) or when the user asks for it — and say which
+it is and why.
+
+### Ask how output should be handled
+
+Work that produces evidence (logs, traces, command output, screenshots, reports) has two reasonable
+endings. **Ask which the user wants** rather than guessing:
+
+- **(a) persist it** — write the output/logs/screenshots to a file, and say exactly where; or
+- **(b) execute and report** — just run it and give a short final status summary.
+
+Don't dump large output into the conversation unasked, and don't silently discard evidence either — for
+troubleshooting and any change with a rollback, (a) is usually the right default to offer.
+
+## Run as the correct OS user
+
+**Identify the right OS user *before* running anything, and switch with a login shell.** Wrong-user
+execution is a top cause of SAP failures, and the damage outlives the command: files created by `root`
+under `/usr/sap`, `/sapmnt` or a DB directory break every later start by the real owner. A login shell
+also matters because each user carries the environment the tools need (`SAPSYSTEMNAME`, `ORACLE_HOME`/
+`ORACLE_SID`, `SYBASE`, `DB2INSTANCE`, library paths) — without it, commands fail or act on the wrong system.
+
+| What you're operating | UNIX user | Windows |
+|---|---|---|
+| SAP instances — `sapcontrol`, `startsap`/`stopsap`, `tp`, `R3trans`, `disp+work`, `sappfpar`, `cleanipc` | **`<sid>adm`** (lower-case **SAP** SID) | `<SID>adm`; services run as `SAPService<SID>` |
+| SAP HANA — `HDB`, `hdbsql`, `hdbnsutil` | **`<sid>adm` of the HANA SID** (e.g. `h10adm` — may differ from the SAP SID) | n/a (HANA server is Linux-only) |
+| Oracle — `sqlplus`, `lsnrctl`, BR\*Tools | **`ora<dbsid>`** (BR\*Tools also runs as `<sid>adm`; generic installs may use `oracle`) | `<SID>adm`; DB runs as a service |
+| SAP ASE — `isql`, `startserver`, Backup Server | **`syb<dbsid>`** | `syb<dbsid>` / `SAPService<SID>` |
+| IBM Db2 — `db2start`/`db2stop`, `db2` CLP | **`db2<dbsid>`** (the instance owner = `DB2INSTANCE`) | same; Db2 runs as a service |
+| SAP MaxDB / liveCache — `dbmcli`, `x_server` | **`sdb`** (software owner, group `sdba`) + a DBM operator at DB level | install/service account |
+| MS SQL Server — `sqlcmd`, service control | n/a (Windows-only for SAP) | `<SID>adm` / the SQL Server service account |
+| SAP Host Agent — `saphostexec`, `saphostctrl` | **`root`** | Administrator / `SAPHostExec` service |
+
+**Rules**
+
+- **Switch with a login shell:** `su - <user>` (the `-` is what loads the environment) or `sudo -iu <user>`.
+  Windows: use the correct account, or an elevated shell only where documented.
+- **`root` only where the procedure explicitly says so** — e.g. `saproot.sh` after a kernel extract, SAP Host
+  Agent install/upgrade. Never as a shortcut around a permission error; that is how root-owned files get
+  created and break the system later.
+- **Verify before acting:** `whoami` / `id`, plus the env actually being set (`echo $SAPSYSTEMNAME`,
+  `echo $ORACLE_SID`, `echo $DB2INSTANCE`, `echo $SYBASE`).
+- **State the user in every command you hand over** (e.g. "as `<sid>adm`:"), and if the required user is not
+  available, say so and stop — do not substitute another user.
+
+## Staying current — check SAP Notes first
+
+SAP Notes supersede this file. Landscapes differ by release, patch level, DB and OS, and SAP changes
+procedures via Notes/KBAs between doc revisions.
+
+**If the [SAP Notes MCP](https://github.com/marianfoo/sap-mcp-servers) is configured, use it before
+acting on anything version-specific** — especially any destructive step, or when a command here doesn't
+behave as documented:
+
+1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
+2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
+   prerequisites and side effects.
+3. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
+assuming this file is current.
+
+## Sources
+
+- **[TT]** **SAP Note 2388483** — *How-To: Data Management for Technical Tables* (HAN-DB, v288,
+  2026-07-27). **[V]** Retrieved and parsed via the SAP Notes MCP during authoring; it is the authoritative,
+  continuously-updated table → area → Notes → report/transaction catalogue, **valid for all databases**, and
+  the source for essentially every row of §3 and the retention items in §4. It also supplies the sizing
+  entry points used in §2 — `HANA_Tables_LargestTables` with `ONLY_TECHNICAL_TABLES 'X'` (**SAP Note
+  1969700**) and `Space_LargestTables` with `ONLY_BASIS_TABLES 'X'` (**SAP Note 1438410**) — states that it
+  replaces SAP Note 706478, and cross-refers **SAP Note 16083** (standard/reorganization jobs), **SAP Note
+  2190119** (S/4HANA technical job repository) and **SAP Note 3582156** (Data Management Guide / Data Volume
+  Management). Individual per-area Notes cited inline in §3 (48400 spool/TemSe; 2335014 + 2362854 table
+  logging; 195157 / 2057897 / 3039724 / 3742661 application log; 11838 short dumps; 40088 + 1574016 IDoc;
+  375566 RFC queues; 802062 + 2363550 RFC logging; 2274315 workload collector; 3015823 change documents;
+  36781 batch input; 966854 + 1641830 SAPoffice; 513454 ALE change pointers; 49545 + 1552169 work items;
+  493156 + 505608 object links; 2034063 TAANA; 2651881 /SDF/SMON; 1052908 eCATT; 2229441 enhancement logs;
+  36283 DDLOG) all come from this Note. https://me.sap.com/notes/2388483
+- **[SAL]** **SAP Note 3137004** — *How to archive and delete audit log from DB* (BC-SEC-SAL, v17,
+  2025-11-25). **[V]** Environment **SAP_BASIS 7.50 SP03 or higher**. Source for the whole of §5: checking
+  **Recording Target**/**Recording Type** in **`RSAU_CONFIG`**; that the procedure applies to *Record in
+  Database* + *Audit Log with Archive Interface* and **not** to *Retention Management* or *API mode*;
+  **`RSAU_ADMIN`** → *Reorganize log table* → **Archive** → **`SARA`** with archiving object **`BC_SAL`**;
+  setting delete jobs to **Not Scheduled**; jobs **`ARV_BC_SAL_WRI*`** / **`ARV_BC_SAL_DEL*`**; the
+  **"Delete with Test Variant"** checkbox on **`RSAU_ARCHIVE_WRITE`**; tables **`RSAU_BUF_DATA`** /
+  **`RSAU_LOG`**; and the explicit warning that *"Immediate deletion is not recommended … Due to legal
+  regulation regarding the handling of audit logs, ensure that the archiving of the data was successful and
+  that the data can be read BEFORE deleting"*. Related: **SAP Note 3346306** (reorganization blocked in API
+  mode), **SAP Note 3467895** (tables appear empty in RSAU_ADMIN but occupy space), **SAP Note 3481355**
+  (technical-settings permission error), **SAP Note 2191612** (*FAQ | Use of Security Audit Log as of SAP
+  NetWeaver 7.50*). https://me.sap.com/notes/3137004
+- **[RM]** **SAP Note 1749142** — *How to remove unused clients including client 001 and 066* (BC-CTS-CCO).
+  **[V]** Used here for the post-deletion reorganization guidance and the DB-component pointers
+  (`BC-DB-ORA`, `BC-DB-HDB`, `BC-DB-INF`, `BC-DB-MSS`, `BC-DB-SDB`), incl. Oracle **Note 646681**
+  (*Reorganization of tables with BRSPACE*) and **Note 541538** (*FAQ: Reorganization*). Client assessment
+  itself lives in [sap-dormant-clients](../sap-dormant-clients/SKILL.md).
+  https://me.sap.com/notes/1749142
+- **[HANA-AUD]** SAP HANA audit log management — `ALTER SYSTEM CLEAR AUDIT LOG`, and
+  `ALTER AUDIT POLICY … SET RETENTION` from **SAP HANA 2.0 SPS 04** — SAP Notes **2159014**, **2308083**,
+  **2599832**, **2676016**, **3084473**, as catalogued in SAP Note 2388483. **[V]**
+- **[JOBS]** **SAP Note 16083** — *Standard jobs, reorganization jobs* — the recurring-job baseline. If the
+  standard jobs are not scheduled, scheduling them is the durable fix rather than a one-off deletion; see
+  [sap-housekeeping](../sap-housekeeping/SKILL.md). **SAP Note 2190119** covers the S/4HANA technical job
+  repository (`SJOBREPO`). [G]
+- **[OS]** OS- and DB-layer file locations (`/usr/sap/<SID>/<INST>/work`, Oracle `saptrace`/`adump`, HANA
+  `trace`) follow the layouts documented in
+  [sap-log-reference](../sap-log-reference/SKILL.md) and
+  [sap-housekeeping](../sap-housekeeping/SKILL.md); the `du`/`find`/PowerShell discovery commands here are
+  standard platform tooling, not SAP-specific, and are read-only. [G]
+
+**To confirm/deepen** — check current SAP Notes with the SAP Notes MCP (`search`, then `fetch` the note ID):
+**2388483** before every assessment (it changes often — v288 at time of writing, with entries added
+monthly), **3137004** before touching the Security Audit Log, **16083** to confirm the standard job
+baseline, and the **reorganization Note for your database component** before promising any figure in the
+"Est. reclaim" column.

@@ -121,6 +121,8 @@ sap-basis-ops/
     ├── sap-troubleshooting/          # method + rules of thumb; enumerate ALL log sources
     ├── sap-log-reference/            # log/trace locator: symptom→log, per component & per DB
     ├── sap-housekeeping/             # reorg jobs, work-dir/audit/spool cleanup, cleanipc
+    ├── sap-space-reclaim/           # what can be deleted, retention fixes, sized reclaim
+    ├── sap-dormant-clients/         # assess & retire unused clients (000/001/066, sandboxes)
     ├── sap-transport-mgmt/           # OS-layer tp / R3trans, buffer, unconditional modes
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
     ├── sap-software-download/        # Software Center: find/qualify files, SP queues, checksums
@@ -136,7 +138,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 14 skills.
+Phases 1 & 2 complete — 16 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -159,6 +161,14 @@ Phases 1 & 2 complete — 14 skills.
   modes, return codes, RDDIMPDP; STMS-preferred guidance.
 - ✅ `sap-kernel-patch` — kernel swap (SAPCAR/SAPEXE/SAPEXEDB/`saproot.sh`/`sapcpe`) + Host Agent update
   (`saphostexec -upgrade`); SUM/SPAM pointer for larger updates.
+- ✅ `sap-dormant-clients` — evidence-based dormancy assessment (RSUSR200/SUIM, ST03N settlement
+  statistics, TBTCO+TBTCP job checks, last-changed dates, TAANA volumes), then safe retirement via SCC5 —
+  including what SCC5 leaves behind (TemSe, T000, SAP* access) and why space needs a reorg after.
+- ✅ `sap-space-reclaim` — landscape cleanup assessment: size first (HANA/Oracle largest-technical-table
+  SQL, TAANA distributions), then the reclaimable inventory across ABAP technical tables, the Security
+  Audit Log archive/delete path, DB-layer traces/audit files and OS-layer leftovers (core dumps, old
+  kernels, SUM dirs, LSMW extracts). Flags which items have a **configurable retention** worth fixing
+  permanently, and is explicit that deleting rows frees no disk without reorganization.
 - ✅ `sap-software-download` — SAP for Me **Software Center**: resolve a component to exact filenames,
   object keys, sizes, SHA-256 checksums, required SPAM level and EPS `.PAT` names via the Software
   Center's own OData service; build a correct SP import queue; verify and stage per OS. **Downloads are
