@@ -83,10 +83,56 @@ Optionally add `&sort=latest_desc`.
 | Topic | Where |
 |---|---|
 | **Global Code of Ethics and Business Conduct** | Trust Center → compliance resources |
-| **Sustainability policies, codes and commitments** | `https://www.sap.com/products/sustainability/our-approach/reporting-and-policies.html` — this is where ESG/SDG-style commitments and reporting live, distinct from the ISO 14001/50001 certificates |
+| **Sustainability policies, codes and commitments** | `https://www.sap.com/products/sustainability/our-approach/reporting-and-policies.html` — ESG commitments and reporting, distinct from the ISO 14001/50001 certificates. **Note: "SDG" in an SAP contract context means *Service Description Guide*, not Sustainable Development Goals — see the agreements table below** |
 | **EU AI Act / Joule Agents** | *SAP Joule Agents Compliance Brief*, linked from the certification page |
 | **Agreements** (contract documents, DPA, supplements) | Trust Center → **Agreements** |
 | **Data protection & privacy** | Trust Center → **Data Protection and Privacy** |
+
+---
+
+## Agreement & contract documents (distinct from certificates)
+
+Base: `https://www.sap.com/about/trust-center/agreements.html`
+
+Cloud library — `…/about/trust-center/agreements/cloud/cloud-services.html` plus a tag or search: **[V]**
+
+| Document type | Query fragment |
+|---|---|
+| **Service Description Guides (SDG)** | `?tag=agreements:product_use_and_support_terms/service-description-guides` |
+| Supplemental terms and conditions | `?tag=language:english&search=Supplement` |
+| Service-level agreements | `?search=Service Level Agreement` |
+| Support schedules | `?search=Support` |
+| Product development schedules | `?tag=agreements:product-development-schedule/product-development-schedule` |
+| General terms and conditions | `?search=General Terms and Conditions` |
+| **AI terms** | `?tag=agreements:general-terms-and-conditions/ai` |
+| **AI Code of Conduct** | `?search=AI%20Code%20of%20Conduct` |
+| **AI third-party pass-through terms** | `?tag=agreements:general-terms-and-conditions/ait/ai-third-party-pass-through-terms` |
+| Data processing agreements | `?search=Data%20Processing` |
+| **Security measures (TOMs for DPA purposes)** | `?tag=agreements:security-measures/security-measures-for-cloud-services` |
+| List of data centers | `?search=Data Centers` |
+
+Other libraries:
+
+| Library | URL |
+|---|---|
+| On-premise service descriptions | `…/agreements/on-premise/service-descriptions.html` |
+| On-premise DPAs and TOMs | `…/agreements/on-premise/data-processing-agreements.html` |
+| Scope documents (incl. Success Plan) | `…/agreements/services/scope-documents.html` |
+| SAP professional services GTC | `…/agreements/services/sap-professional-services.html` |
+| Consulting services supplements | `…/agreements/cloud/consulting-services.html` |
+| SAP cloud product policies (information only) | `https://www.sap.com/about/agreements/policies.html` |
+
+**SDG naming/versioning:** documents are listed as `LANGUAGE v.N-YEAR` (e.g. *SAP Business Technology
+Platform Service Description Guide — ENGLISH v.5-2026*). **The governing version is the one referenced in
+the customer's order form**, not the latest published. Several products can share one SDG — e.g. *SAP Cloud
+ERP Private; RISE with SAP S/4HANA Cloud, private edition; SAP ERP, private cloud edition* are one
+document. **[V]**
+
+**Contract structure** — four building blocks: **Order Form**, **Cloud Service Description** (the
+product-specific collection containing the SDG), **Data Processing Agreement**, **General Terms and
+Conditions**. The first, third and fourth apply to any cloud service on SAP's pricelist; the Cloud Service
+Description is product-specific. The **Master Cloud Customer Agreement (MCCA)** is the framework agreement
+across most of the portfolio. Contracts are administered in **SAP for Me → Finance and Legal Dashboard**. **[V]**
 
 ---
 

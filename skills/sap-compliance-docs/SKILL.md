@@ -9,8 +9,11 @@ description: >-
   Canadian PBMM, KRITIS/NIS2), AI governance (ISO 42001, EU AI Act, Joule Agents), and ALM usage rights for
   SAP Cloud ALM, SAP Solution Manager, SAP Focused Run and Tricentis. Use for "which ISO certificate covers
   my service", "SOC 2 report for", "compliance finder", "trust center", "do we need to license Focused
-  Run", "Solution Manager usage rights", "audit evidence for SAP". Locates authoritative documents — it
-  does not give legal or licensing advice.
+  Run", "Solution Manager usage rights", "audit evidence for SAP". Also covers the contract document stack —
+  order form, Cloud Service Description including the Service Description Guide (SDG), DPA, GTC, supplements,
+  SLAs, TOMs and AI terms — and where each is published. Use also for "service description guide", "SDG",
+  "SLA document", "DPA", "TOMs", "what did we actually buy". Locates authoritative documents — it does not
+  give legal or licensing advice.
 ---
 
 # SAP Compliance, Certification & Usage-Rights Documents
@@ -139,6 +142,80 @@ reports follow a *12-month audit cycle*. **Check the current calendar rather tha
 Because this area changes fastest, **always re-read the Trust Center AI section rather than relying on this
 skill's summary**, and treat any statement about a specific Joule capability's regulatory classification as
 something to confirm in the current brief.
+
+---
+
+## 5a. The contract document stack — where the **Service Description Guide** sits
+
+Certification answers *"is it secure/compliant"*. The **contract documents** answer *"what did we actually
+buy, and what is SAP obliged to deliver"*. Different question, different library.
+
+**An SAP cloud contract has four building blocks** — SAP's own wording: **[V, AGR]**
+
+| Block | Scope |
+|---|---|
+| **Order Form** | pricing, scope, key terms |
+| **Cloud Service Description** | ***"a product-specific collection of documents"*** — this is where the **Service Description Guide (SDG)** lives |
+| **Data Processing Agreement (DPA)** | applies where the service processes personal data; *"defines SAP's obligation to maintain applicable certifications"* |
+| **General Terms and Conditions (GTC)** | usage rights, ownership of customer data, warranties, limitation of liability, confidentiality |
+
+*"The order form, data processing agreement, and general terms and conditions apply to any cloud service on
+SAP's pricelist while the cloud service description is a product-specific collection of documents."*
+**[V, AGR]**
+
+> 🔗 **The DPA is the bridge between §1–4 and this section.** It obliges SAP to *maintain applicable
+> certifications* — so a certificate from the Compliance Finder is often the evidence that a DPA commitment
+> is being met. Auditors frequently ask for both together.
+
+### Finding the SDG for a service
+
+```
+https://www.sap.com/about/trust-center/agreements/cloud/cloud-services.html
+    ?tag=agreements:product_use_and_support_terms/service-description-guides
+```
+
+Real entries at time of authoring — note the naming: **[V, AGR]**
+
+| Document | Version |
+|---|---|
+| SAP Business Technology Platform Service Description Guide | `ENGLISH v.5-2026` |
+| SAP Cloud ERP Private; RISE with SAP S/4HANA Cloud, private edition; SAP ERP, private cloud edition SDG | `ENGLISH v.7-2026` |
+| SAP S/4HANA Cloud Public Edition and GROW with SAP — *Service Use Descriptions* | `ENGLISH v.7-2026` |
+| SAP Business Data Cloud SDG · SAP Concur SDG | `ENGLISH v.8-2026` |
+| SAP Service Description for SAP MaxAttention / ActiveAttention (on-premises) | `v.3-2026` |
+
+> 🚨 **SDGs are versioned `LANGUAGE v.N-YEAR`, and the current one is probably not yours.** The version that
+> governs is **the one referenced in the customer's order form**, not the newest on the site. Always confirm
+> the version before quoting an obligation — and note that several products share one SDG (RISE / Cloud ERP
+> Private / SAP ERP private cloud edition are covered by a single document). **[V, AGR]**
+
+### The rest of the agreement library
+
+All under `…/trust-center/agreements/cloud/cloud-services.html` with a tag or search: **[V, AGR]**
+
+| Document type | What it settles |
+|---|---|
+| **Service Description Guides** | functional scope of the service |
+| **Supplements** | *"additional product-specific terms … additional information on the usage metrics"* |
+| **Service Level Agreements** | *"system availability … service credits in case SAP fails to meet the SLA … maintenance windows"* |
+| **Support schedules** | support scope and response commitments |
+| **Product development schedules** | roadmap/development commitments |
+| **Data Processing Agreements** | personal-data processing |
+| **Security measures (TOMs)** | technical & organisational measures **for DPA purposes** |
+| **List of data centers** | where the service runs — pairs with the finder's *Region/Country* filter |
+| **AI terms**, **AI Code of Conduct**, **AI third-party pass-through terms** | AI-specific contractual terms — the contractual counterpart to §5's ISO 42001 / EU AI Act material |
+
+**Framework agreement:** the **Master Cloud Customer Agreement (MCCA)** is *"a framework agreement …
+that apply[ies] across most of the SAP cloud services portfolio, eliminating the need to negotiate separate
+terms for each service."* Samples of the MCCA, its order form and the professional services schedule are
+published; customers can request to sign the standard MCCA through **SAP for Me**. **[V, AGR]**
+
+**On-premise and services** have their own libraries: `…/agreements/on-premise/service-descriptions.html`,
+`…/agreements/services/scope-documents.html`, and separate DPA/TOM documents for support and professional
+services.
+
+**Contract administration** — view, renew and terminate contracts in **SAP for Me → Finance and Legal
+Dashboard**. [V, AGR]
 
 ---
 
@@ -354,6 +431,18 @@ assuming this file is current.
   may have different usage-rights definitions and that Enterprise Support scope also covers Product Support
   for Large Enterprises and premium engagements such as SAP ActiveAttention.
   https://support.sap.com/en/alm/usage-rights.html
+- **[AGR]** **SAP Trust Center — Agreements**, and the **Cloud Services** document finder. **[V]** Read live
+  during authoring. Source for §5a: the four contract building blocks and the wording *"The order form, data
+  processing agreement, and general terms and conditions apply to any cloud service on SAP's pricelist while
+  the cloud service description is a product-specific collection of documents"*; the definitions of
+  **supplement**, **SLA** and **DPA** (including that the DPA *"defines SAP's obligation to maintain
+  applicable certifications"*) and **GTC**; the **MCCA** framework agreement and its published samples;
+  contract administration via **SAP for Me → Finance and Legal Dashboard**; the deep-link tags for every
+  agreement type including **Service Description Guides**, **AI terms**, **AI Code of Conduct**, **AI
+  third-party pass-through terms** and **Security measures (TOMs)**; and the live SDG listing with its
+  `LANGUAGE v.N-YEAR` versioning (e.g. *SAP Business Technology Platform Service Description Guide —
+  ENGLISH v.5-2026*, *SAP Cloud ERP Private; RISE with SAP S/4HANA Cloud, private edition; SAP ERP, private
+  cloud edition — ENGLISH v.7-2026*). https://www.sap.com/about/trust-center/agreements.html
 - **[KBA]** **SAP KBA 2878553** — *SAP Solution Manager 7.2 Usage Rights*. The Note-form counterpart to the
   usage-rights page; fetch it with the SAP Notes MCP for the version current to your agreement.
 - **[SFM]** **SAP for Me → Portfolio & Products** — *"the central access point and the go-to destination for
