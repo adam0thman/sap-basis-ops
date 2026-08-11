@@ -133,7 +133,7 @@ sap-basis-ops/
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
     ├── sap-saprouter/                # NI proxy + saprouttab
     ├── sap-cloud-connector/          # BTP ↔ on-prem secure tunnel
-    └── sap-compliance-docs/         # Trust Center certs, SOC/ISO mapping, ALM usage rights
+    └── sap-compliance-docs/          # Trust Center certs, SOC/ISO mapping, ALM usage rights
 ```
 
 Task skills cross-link `sap-db-command-reference` rather than duplicating DB commands; only
