@@ -132,7 +132,8 @@ sap-basis-ops/
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
     ├── sap-saprouter/                # NI proxy + saprouttab
-    └── sap-cloud-connector/          # BTP ↔ on-prem secure tunnel
+    ├── sap-cloud-connector/          # BTP ↔ on-prem secure tunnel
+    └── sap-compliance-docs/         # Trust Center certs, SOC/ISO mapping, ALM usage rights
 ```
 
 Task skills cross-link `sap-db-command-reference` rather than duplicating DB commands; only
@@ -140,7 +141,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 18 skills.
+Phases 1 & 2 complete — 19 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -189,6 +190,13 @@ Phases 1 & 2 complete — 18 skills.
   verified by fetching 7 support packages unattended, all checksums matching.
 - ✅ `sap-backup-recovery` — backup types + recovery types (most-recent / PITR / specific), log-mode
   prerequisites, and per-DB restore/recover commands (HANA/Oracle/ASE/Db2/MaxDB/SQL Server).
+
+- ✅ `sap-compliance-docs` — governance & audit evidence: the Trust Center **Compliance Finder** and its
+  four dimensions (offering / **compliance entity** / assessment period / region), the certification
+  catalogue (ISO 27001/27017/27018/27701/42001, SOC 1 & 2 + bridge letters, C5, PCI DSS, CSA STAR, TISAX,
+  GxP, EU Cloud CoC), regional schemes (FedRAMP, CMMC, PBMM, NIS2), AI governance (ISO 42001, EU AI Act,
+  Joule Agents), and **ALM usage rights** for SAP Cloud ALM / Solution Manager / Focused Run / Tricentis.
+  Locates authoritative documents; explicitly does not give legal or licensing advice.
 
 ## Install (Claude Code plugin)
 
