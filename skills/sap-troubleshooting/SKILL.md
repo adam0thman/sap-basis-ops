@@ -223,12 +223,15 @@ SAP Notes supersede this file, and for troubleshooting they are often *the answe
    trace-analysis spreadsheet or step-by-step PDF is frequently the attachment rather than the Note text.
 4. Prefer the Note over this file where they disagree, and say which Note you followed.
 
-**Downloading an attachment:** `fetch` returns `attachments[].url`; **`fetch_attachment`** retrieves the
-bytes. Pass the URL verbatim. If your MCP build predates that tool, open the URL in a signed-in browser and
-say the file was fetched manually.
+**Downloading an attachment:** `fetch` returns `attachments[].url` **and `attachments[].filename`**;
+**`fetch_attachment`** retrieves the bytes. Pass the URL verbatim. If your MCP build predates that tool,
+open the URL in a signed-in browser and say the file was fetched manually.
 
-> ⚠️ An unauthenticated request to an attachment URL returns **HTTP 200 with a small HTML login stub**, not
-> an error — verify content type and magic bytes before trusting a file fetched outside the MCP.
+> ⚠️ **Two ways a hand-rolled fetch goes wrong — both verified.** An unauthenticated request returns
+> **HTTP 200 with a small HTML login stub**, not an error — check content type and magic bytes. And SAP
+> serves many attachments from a *generic endpoint* (`…/services/attachment.htm?iv_key=…`), so the URL
+> basename is `attachment.htm` even for a PDF — take the name from **`attachments[].filename`** or the
+> **`Content-Disposition`** header, never from the URL path.
 
 No MCP available? Look it up on `me.sap.com/notes` and say the check was skipped.
 

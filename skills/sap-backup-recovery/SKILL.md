@@ -189,13 +189,19 @@ behave as documented:
    whose text says "see the attached document" is not fully read until you have it.
 4. Prefer the Note over this file where they disagree, and say which Note you followed.
 
-**Downloading an attachment:** `fetch` returns `attachments[].url`; **`fetch_attachment`** retrieves the
-bytes. Pass the URL verbatim — the URLs are opaque and cannot be constructed. If your MCP build predates
-that tool, open the URL in a signed-in browser instead and say the file was fetched manually.
+**Downloading an attachment:** `fetch` returns `attachments[].url` **and `attachments[].filename`**;
+**`fetch_attachment`** retrieves the bytes. Pass the URL verbatim — the URLs are opaque and cannot be
+constructed. If your MCP build predates that tool, open the URL in a signed-in browser instead and say the
+file was fetched manually.
 
-> ⚠️ An unauthenticated request to an attachment URL returns **HTTP 200 with a small HTML login stub**, not
-> an error. If you fetch one outside the MCP, verify the content type and magic bytes before trusting the
-> file — otherwise you save a JavaScript redirect page under a `.pdf` name.
+> ⚠️ **Two ways a hand-rolled fetch goes wrong — both verified.**
+> **1. Trusting the status code.** An unauthenticated request returns **HTTP 200 with a small HTML login
+> stub**, not an error. Check the content type and magic bytes, or you save a JavaScript redirect page
+> under a `.pdf` name.
+> **2. Naming the file from the URL.** SAP serves many attachments from a *generic endpoint* —
+> `…/services/attachment.htm?iv_key=…&iv_guid=…` — so the URL basename is `attachment.htm` even when the
+> payload is a 24-page PDF. Take the name from **`attachments[].filename`** or the response's
+> **`Content-Disposition`** header, never from the URL path.
 
 No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
 assuming this file is current.
