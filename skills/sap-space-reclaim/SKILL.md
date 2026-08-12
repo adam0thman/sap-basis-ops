@@ -67,9 +67,12 @@ Never start from a list of "things you can clean". Start from **what is big in t
 | **Oracle** | `Space_LargestTables` with `ONLY_BASIS_TABLES 'X'` | **SAP Note 1438410** |
 
 > 📎 **Both statements are shipped as a ZIP attachment on those Notes, not as text in the Note body.**
-> Verified: 1969700 carries a 1.6 MB `SQLStatements_EarlierRev*.zip` and 1438410 a 508 KB
-> `20260614_SQLStatements.zip`. Retrieve them with the MCP's **`fetch_attachment`** (or download from the
-> Note in a signed-in browser) — reading the Note text alone will not give you the SQL. **[V]**
+> Verified by downloading and extracting them: 1969700 carries `SQLStatements_EarlierRevisions.zip`
+> (1,684,928 B) containing **`HANA_Tables_LargestTables.txt`** plus `_1.00.120+` / `_2.00.030+` revision
+> variants; 1438410 carries `20260614_SQLStatements.zip` (508,395 B, **338 files**) containing
+> **`Space_LargestTables.txt`** and `Space_LargestTables_Fallback.txt`. Retrieve them with the MCP's
+> **`fetch_attachment`** (or from the Note in a signed-in browser) — reading the Note text alone gives you
+> **no SQL at all**. Pick the statement file matching your revision. **[V]**
 
 Otherwise, per-DB size views: **`DB02`** / **`DBACOCKPIT`** → space → largest tables/segments. Per-database
 specifics in [sap-db-command-reference](../sap-db-command-reference/SKILL.md).

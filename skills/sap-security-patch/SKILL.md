@@ -296,8 +296,10 @@ assuming this file is current.
 - **[P5]** **SNOTE** (Note Assistant) + **`RSECNOTE`** — implement/track security notes on the system.
   help.sap.com (Note Assistant).
 - **[P6]** **Transport-Based Correction Instructions (TCI)** — **SAP Note 2187425** (*Information about
-  SAP Note Transport based Correction Instructions*; the substance is an **attachment**, `TCI_for_Customer.pdf`,
-  878 KB — fetch it with the MCP's `fetch_attachment` rather than reading only the Note text **[V]**),
+  SAP Note Transport based Correction Instructions*; the Note's entire Solution section reads *"See the
+  attached PDF for further information"* — the substance is the attachment **`TCI_for_Customer.pdf`**
+  (878,422 B, 24 pages). Fetch it with the MCP's `fetch_attachment`; the Note text alone tells you almost
+  nothing **[V]**),
   **2543372** (*How to implement TCI*; also carries attachments), **2499947**
   (*TN835 or TN872: the transport based correction of SAP Note is not available*), **2576306** (TCI for
   download of digitally signed SAP Notes). Component BC-UPG-NA.
