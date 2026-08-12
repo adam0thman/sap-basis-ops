@@ -219,7 +219,16 @@ SAP Notes supersede this file, and for troubleshooting they are often *the answe
 1. `search` the **exact error text, message ID, dump name, or component + symptom**.
 2. `fetch` the promising Note IDs — check validity (release/SP/component), prerequisites and side effects
    before applying anything.
-3. Prefer the Note over this file where they disagree, and say which Note you followed.
+3. **Check the `attachments` array** — for troubleshooting Notes especially, the diagnostic script,
+   trace-analysis spreadsheet or step-by-step PDF is frequently the attachment rather than the Note text.
+4. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+**Downloading an attachment:** `fetch` returns `attachments[].url`; **`fetch_attachment`** retrieves the
+bytes. Pass the URL verbatim. If your MCP build predates that tool, open the URL in a signed-in browser and
+say the file was fetched manually.
+
+> ⚠️ An unauthenticated request to an attachment URL returns **HTTP 200 with a small HTML login stub**, not
+> an error — verify content type and magic bytes before trusting a file fetched outside the MCP.
 
 No MCP available? Look it up on `me.sap.com/notes` and say the check was skipped.
 

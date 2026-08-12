@@ -66,6 +66,11 @@ Never start from a list of "things you can clean". Start from **what is big in t
 | **HANA** | `HANA_Tables_LargestTables` with `ONLY_TECHNICAL_TABLES 'X'` | **SAP Note 1969700** |
 | **Oracle** | `Space_LargestTables` with `ONLY_BASIS_TABLES 'X'` | **SAP Note 1438410** |
 
+> 📎 **Both statements are shipped as a ZIP attachment on those Notes, not as text in the Note body.**
+> Verified: 1969700 carries a 1.6 MB `SQLStatements_EarlierRev*.zip` and 1438410 a 508 KB
+> `20260614_SQLStatements.zip`. Retrieve them with the MCP's **`fetch_attachment`** (or download from the
+> Note in a signed-in browser) — reading the Note text alone will not give you the SQL. **[V]**
+
 Otherwise, per-DB size views: **`DB02`** / **`DBACOCKPIT`** → space → largest tables/segments. Per-database
 specifics in [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
 
@@ -491,7 +496,18 @@ behave as documented:
 1. `search` the topic (e.g. the component + symptom, or a Note number cited below).
 2. `fetch` the promising Note IDs for the current text, validity (affected releases/components),
    prerequisites and side effects.
-3. Prefer the Note over this file where they disagree, and say which Note you followed.
+3. **Check the `attachments` array.** SAP routinely puts the actual deliverable *in an attachment* rather
+   than the Note body — sizing guides, SQL script collections, configuration PDFs, spreadsheets. A Note
+   whose text says "see the attached document" is not fully read until you have it.
+4. Prefer the Note over this file where they disagree, and say which Note you followed.
+
+**Downloading an attachment:** `fetch` returns `attachments[].url`; **`fetch_attachment`** retrieves the
+bytes. Pass the URL verbatim — the URLs are opaque and cannot be constructed. If your MCP build predates
+that tool, open the URL in a signed-in browser instead and say the file was fetched manually.
+
+> ⚠️ An unauthenticated request to an attachment URL returns **HTTP 200 with a small HTML login stub**, not
+> an error. If you fetch one outside the MCP, verify the content type and magic bytes before trusting the
+> file — otherwise you save a JavaScript redirect page under a `.pdf` name.
 
 No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
 assuming this file is current.

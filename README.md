@@ -103,10 +103,12 @@ SAP_PASSWORD="your-password"
 > `SAP_PASSWORD=My#Pass` silently becomes `My`. This presents as a login that hangs waiting for a
 > redirect, and is easily mistaken for an MFA problem.
 
-The skills then use its two tools — `search` (find Notes by topic) and `fetch` (full Note text, validity,
+The skills then use its tools — `search` (find Notes by topic), `fetch` (full Note text, validity,
 support packages, references, prerequisites, side effects, and — with `includeCorrections=true` —
 **correction instructions per software component and release range**, including the `downloadUrl` that
-identifies a **TCI** and points at its transport package). **The MCP is optional**: without it the skills still work from their cited
+identifies a **TCI** and points at its transport package), and **`fetch_attachment`** (download a Note's
+attached files — SAP routinely ships the real deliverable as an attachment: sizing guides, SQL script
+collections, configuration PDFs, spreadsheets). **The MCP is optional**: without it the skills still work from their cited
 help.sap.com sources, but they will say the currency check was skipped rather than assume they are current.
 
 ## Layout
