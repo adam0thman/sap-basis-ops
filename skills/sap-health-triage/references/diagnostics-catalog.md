@@ -307,6 +307,30 @@ cleanipc <nr> remove        # ⚠️ remove them — ONLY when that instance is 
 > `<sid>adm`. Related but separate: saposcol's own shared memory is cleaned with `ipcrm` (above), not
 > `cleanipc`. [G]
 
+**Reading the output — three things people get wrong.** [V]
+
+1. **`Running SAP-Systems (Nr)...:` is the safety gate, and it is at the top for a reason.** If that list is
+   **empty**, nothing was up and the removal was safe. If it names an instance, you are about to damage a
+   running system. Read it before the removal lines, not after.
+2. **The instance number is the one you typed, not the one you meant.** `cleanipc 00 remove all` cleans
+   instance **00** only. If you are recovering a failed start of ASCS **01**, cleaning 00 achieves nothing
+   and the blocking segments are still there. Confirm which number is which
+   (`sapcontrol -nr <nr> -function GetProcessList`) and use **`cleanipc <nr> show`** — read-only — before
+   committing to a removal.
+3. **`(may be incomplete when not in superuser mode)` is a real limitation, not boilerplate.** Run as
+   `<sid>adm`, segments owned by another user (root, or a second `<sid>adm` on a shared host) are invisible
+   and stay behind. If a start still fails with shared-memory errors after a "successful" cleanup, re-run
+   as **root** — that message is the reason.
+
+**Is it needed at all?** Not routinely. A clean `StopSystem`/`stopsap` releases its own IPC, so a properly
+stopped instance normally has **nothing to remove**. `cleanipc` is a *recovery* step for the case where a
+crash or `kill -9` left orphans that block the next start (shared-memory create/attach failures in
+`dev_w*` or the startup log). Finding orphans on a supposedly clean system is itself a signal that the
+previous shutdown was not clean.
+
+Typical orphans after an unclean exit: an **Event Flag** key and the **SCSA** (SAP Communication Segment
+Area) shared-memory segment — removing those two is the common case.
+
 ## `jsmon` / `jcmon` — the Java-stack equivalent of `dpmon`
 
 Only where **AS Java** is installed (PI/PO, EP, Solution Manager Java, dual-stack). Same idea as `dpmon`:
