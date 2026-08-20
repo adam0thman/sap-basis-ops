@@ -24,6 +24,11 @@ this skill is the **recovery** side + strategy — the part you need when someth
 >   [sap-housekeeping](../sap-housekeeping/SKILL.md) §6).
 > - Identify SID/host/DB/OS → classify PRD → preview the exact restore + recovery point → confirm → run →
 >   verify the DB opens and the data is at the expected point.
+> - **Version first, command second.** Establish DB version, kernel, OS — and for Oracle the **BR\*Tools
+>   patch level** — before quoting anything (§3a). The same command is correct on one release and
+>   destructive on another.
+> - **Ask whether anything is encrypted before you promise a restore** (§3b). Keys are a separate asset;
+>   without them the backup is unusable on any host but the original.
 
 ---
 
@@ -62,6 +67,57 @@ scheduled backups from **DBA Cockpit (DB13)**; recovery is done with the DB-nati
 | **SQL Server** (`mss`) | `BACKUP DATABASE`/`LOG` | `RESTORE DATABASE … WITH NORECOVERY` → `RESTORE LOG … WITH RECOVERY [STOPAT …]` |
 
 Full commands, PITR syntax, and verify steps for each: **[references/db-backup-recovery.md](references/db-backup-recovery.md)**.
+
+## 3a. Establish the version before quoting any command
+
+**The same database name is not the same procedure.** Before producing commands, pin down three things —
+all three, because the matrix is three-dimensional: **DB version**, **SAP kernel release**, **OS** — and
+for Oracle a fourth, the **BR\*Tools patch level**, which gates more than the DB version does.
+
+```bash
+disp+work -version | head -20          # kernel release + patch level
+echo $dbms_type                        # DB type as SAP sees it
+```
+
+| DB | Version query | The divergence that matters |
+|---|---|---|
+| **HANA** | `SELECT VERSION FROM M_DATABASE;` | 1.0 vs 2.0; **MDC tenants vs single-container**; **LSS** active |
+| **Oracle** | `SELECT banner_full FROM v$version;` **+ `SELECT cdb FROM v$database;`** | **CDB/PDB multitenant** — different recovery model entirely |
+| **Db2** | `db2level` | 10.x vs 11.x; fix-pack-gated behaviour |
+| **ASE** | `select @@version` | cumulative dumps are **16.0+** |
+| **MaxDB** | `dbmcli … dbm_version` | — |
+| **SQL Server** | `SELECT @@VERSION;` | backup-to-URL, TDE, ADR differ by release |
+
+**Then check it is a supported combination** — the **Product Availability Matrix**, per SAP Note **3432900**:
+PAM → application → *Technical Release Information* → *Database Platforms* → filter Kernel / Database / OS,
+and read the **"Supported until" End of Maintenance date**, not just the tick. [G, PAM]
+
+Method, per-DB support notes and the full divergence list:
+**[references/version-support-matrix.md](references/version-support-matrix.md)**
+
+---
+
+## 3b. Encryption — the backup you cannot decrypt
+
+If **any** of data volume, log volume or backup stream is encrypted, the keys are a **separate asset with a
+separate lifecycle**, and a restore onto a different host will fail without them — often with an error that
+looks like data corruption rather than a key problem.
+
+> 🚨 **HANA with LSS active:** an LSS key backup taken on one server and recovered on another, with volume
+> encryption on both, produces a database that **will not start**, reporting
+> `invalid checksum algorithm 6` and `Could not read AnchorPage`. That is a key mismatch, **not**
+> corruption. `hdbnsutil -backupRootKeysAndSettings` also covers **all** root key types at once — you
+> cannot back up just one. [V, LSS]
+
+> **Oracle TDE:** BR\*Tools only gained *Manage data encryption* at **7.40 Patch 30**. **SQL Server TDE:**
+> the certificate **and private key** must be restored into `master` on the target *before* the database
+> restore. **Db2:** the keystore and master key label must exist on the target first.
+
+Full treatment — the four questions to ask on any platform, per-DB key commands, and the only restore test
+that actually proves key management works:
+**[references/backup-encryption-keys.md](references/backup-encryption-keys.md)**
+
+---
 
 ## 4. Test-restore discipline
 
@@ -207,6 +263,20 @@ No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check 
 assuming this file is current.
 
 ## Sources
+
+- **[PAM]** **SAP Note 3432900** — *How to check supported versions of Database/Kernel/OS in the Product
+  Availability Matrix (PAM)* (BC-DB-DB6). **[V]** The PAM navigation procedure used in §3a.
+- **[MT]** **SAP Note 2333995** — *BR\*Tools support for Oracle multitenant database* (BC-DB-ORA-DBA,
+  v16). **[V]** The BR\*Tools patch gates and `-rpd|-recov_pdb` behaviour behind §3a and the Oracle section
+  of [references/db-backup-recovery.md](references/db-backup-recovery.md).
+- **[LSS]** **SAP Note 3756303** — *How to backup and recover SAP HANA Root Keys when Local Secure Store
+  (LSS) is active* (HAN-DB-SEC, v2). **[V]** Behind §3b and
+  [references/backup-encryption-keys.md](references/backup-encryption-keys.md).
+- **SAP Note 1642148** — *FAQ: SAP HANA Database Backup & Recovery*; **2444090** — *FAQ: SAP HANA Backup
+  Encryption*; **2165547** — *… System Replication Landscape*; **2101244** — *FAQ: MDC*. **[V]**
+- **SAP Note 1174136** (Oracle end-of-support dates), **101809** / **1168456** (Db2 supported versions and
+  end of support), **1948334** (HANA update paths), **2162183** / **1941500** (ASE), **1076022**
+  (SQL Server release planning). **[V]**
 
 - **[B1]** *Recover a Database* / *RECOVER DATA Statement* — SAP HANA Administration Guide (HANA Cockpit /
   Studio; most-recent / point-in-time / specific backup; system vs tenant; backup catalog). **[V]**
