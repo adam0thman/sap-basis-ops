@@ -110,12 +110,24 @@ restored into `master` on the target *first*. Without it the restore fails outri
 
 ---
 
-## SAP ASE and SAP MaxDB
+## SAP ASE — database / column encryption
 
-Encryption is available on both, and the same four questions apply. **Coverage here is thinner than for
-HANA and Oracle** — Notes searches on this S-user return substantially less for these platforms, which is
-an **entitlement limitation rather than an absence of documentation**. Verify against the current SAP Note
-for your release before relying on any procedure, and record what you find.
+- ASE encrypts at **database** and **column** level; the **encryption keys live in the database**, which is
+  precisely the trap in question 2 — a dump of an encrypted database is useless without the key material.
+- The **master key** / key copies and their passwords must be recoverable independently of the dump.
+- After `load database` onto another server, keys must be re-established before data is readable.
+- Verify the specifics for your release (15.7 vs 16.0) — see hub note **2162183**. [G]
+
+## SAP MaxDB
+
+- MaxDB supports encrypted backups; the key material is held with the database instance configuration.
+- A `recover_start` on a rebuilt host needs that configuration restored first.
+- Verify per build against the MaxDB documentation. [G]
+
+> ⚠️ **ASE and MaxDB coverage is thinner than HANA/Oracle/Db2 and is marked [G] throughout.** SAP Notes
+> searches on this S-user return substantially less for these platforms — an **entitlement limitation, not
+> an absence of documentation**. Treat the above as the questions to answer, not as a verified procedure,
+> and record what you confirm.
 
 ---
 
