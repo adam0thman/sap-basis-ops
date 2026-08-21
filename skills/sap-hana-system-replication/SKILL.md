@@ -258,6 +258,8 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 - **`sap-space-reclaim`** — HANA crashdump/rtedump files, and log volumes filled by retained segments.
 - **`sap-ase-hadr`** — the ASE equivalent (HADR / Always-On). **Different technology entirely** —
   Replication-Server-based, driven by `sap_*` RMA commands. No HSR command transfers.
+- **`sap-oracle-dataguard`** — the Oracle equivalent. SAP *restricts* Data Guard (physical standby
+  only, no logical standby); Note 105047 governs, not Oracle's docs.
 
 ---
 ## Execution discipline (non-negotiable)

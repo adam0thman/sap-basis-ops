@@ -198,6 +198,7 @@ This list kills more designs than any other page in the guide. **[V]**
 - **`sap-backup-recovery`** — ASE dump/load; loading from an external dump into an HADR system.
 - **`sap-hana-system-replication`** — the HANA equivalent. **Different technology — do not transfer commands.**
 - **`sap-health-triage`** — is the instance up at all before you blame replication.
+- **`sap-oracle-dataguard`** — the Oracle equivalent (physical standby, DGMGRL, protection modes).
 
 ---
 ## Execution discipline (non-negotiable)

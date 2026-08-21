@@ -42,6 +42,7 @@ database using database-specific tools or commands."* This skill is that databas
   this file covers only the operational start/stop/connect/status commands.
 - **`sap-hana-system-replication`** — HANA HSR: `hdbnsutil`, replication/operation modes, takeover.
 - **`sap-ase-hadr`** — ASE HADR / Always-On: RMA `sap_*` commands, Fault Manager, split-brain check.
+- **`sap-oracle-dataguard`** — Oracle Data Guard: physical standby, DGMGRL, protection modes.
 
 ## Execution discipline (non-negotiable)
 
