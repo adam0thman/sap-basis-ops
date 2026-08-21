@@ -256,6 +256,8 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 - **`sap-db-command-reference`** — `HDB start/stop`, `hdbsql`, HANA paths and the `<sid>adm` rules.
 - **`sap-health-triage`** — is the system up at all, before you blame replication.
 - **`sap-space-reclaim`** — HANA crashdump/rtedump files, and log volumes filled by retained segments.
+- **`sap-ase-hadr`** — the ASE equivalent (HADR / Always-On). **Different technology entirely** —
+  Replication-Server-based, driven by `sap_*` RMA commands. No HSR command transfers.
 
 ---
 ## Execution discipline (non-negotiable)

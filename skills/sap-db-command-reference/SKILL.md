@@ -40,6 +40,8 @@ database using database-specific tools or commands."* This skill is that databas
 - **Start/stop ordering** (DB relative to ASCS/ERS/PAS/AAS) lives in `sap-system-lifecycle`.
 - **DB log/trace cleanup** (backup catalog, transaction logs, DB traces) lives in `sap-housekeeping`;
   this file covers only the operational start/stop/connect/status commands.
+- **`sap-hana-system-replication`** — HANA HSR: `hdbnsutil`, replication/operation modes, takeover.
+- **`sap-ase-hadr`** — ASE HADR / Always-On: RMA `sap_*` commands, Fault Manager, split-brain check.
 
 ## Execution discipline (non-negotiable)
 

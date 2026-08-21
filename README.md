@@ -131,6 +131,7 @@ sap-basis-ops/
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
     ├── sap-software-download/        # Software Center: find/qualify files, SP queues, checksums
     ├── sap-hana-system-replication/ # HSR: setup, takeover, failback, multitier/multitarget
+    ├── sap-ase-hadr/             # ASE HADR/Always-On: RMA sap_* commands, Fault Manager, split-brain
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
@@ -144,7 +145,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 20 skills.
+Phases 1 & 2 complete — 21 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
