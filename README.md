@@ -197,7 +197,9 @@ Phases 1 & 2 complete — 20 skills.
   SR Guide (which side, online vs offline), replication modes vs operation modes, the **version matrix**
   gating every feature from HANA 1.0 SPS 09 through 2.0 SPS 08, multitier/multitarget, takeover with
   handshake, failback, `systemReplicationStatus.py` / `landscapeHostConfiguration.py` return codes, and
-  HA/DR provider hooks incl. the **SAPHanaSR → SAPHanaSR-angi** breaking change.
+  HA/DR provider hooks incl. the **SAPHanaSR → SAPHanaSR-angi** breaking change, plus
+  **scale-out**: the identical-topology rule, host mapping via `-sr_state --sapcontrol=1`, the node-count
+  ordering that inverts between add and remove, and the third-site majority maker.
 
 - ✅ `sap-compliance-docs` — governance & audit evidence: the Trust Center **Compliance Finder** and its
   four dimensions (offering / **compliance entity** / assessment period / region), the certification

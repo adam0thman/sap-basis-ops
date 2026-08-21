@@ -62,6 +62,8 @@ newly installed HANA 2.0 *MDC* system (SAP Note 2101244) — both sites must run
 **[V, SR Guide §Prerequisites]**
 
 1. **Same SID *and* same instance number** on primary and secondary. Not "should" — required.
+   **On scale-out, the *topology* must be identical too** — worker/standby layout and host count, not
+   just the count. Non-MDC cannot replicate to MDC. **[V, Note 1999880 Q52]** → [references/hsr-scale-out.md](references/hsr-scale-out.md)
 2. **Copy the system PKI SSFS key and data file** from primary to secondary *before* registering
    (HANA 2.0):
    ```
@@ -228,6 +230,13 @@ python getTakeoverRecommendation.py     # 2.0 SPS 03+ — prefer this over readi
 > **`getTakeoverRecommendation.py`**. **[V]**
 
 `hdbnsutil -sr_state` is safe and read-only on both sides — it is the right first call in any triage.
+**When a script consumes it, add `--sapcontrol=1`** for parseable `key=value` output instead of the
+boxed layout. On multi-host and multitier systems it also prints the **host mapping**, plus
+`active primary site` and `primary masters` on a secondary. **[V]**
+
+> ⚠️ **An empty host-mapping block does not mean replication is broken.** On an offline HANA no
+> mapping is shown at all, and on secondaries it cannot be shown while the database is down
+> (SAP Note 2315257). Check the database is up before diagnosing the replication. **[V]**
 
 ---
 
@@ -238,6 +247,7 @@ python getTakeoverRecommendation.py     # 2.0 SPS 03+ — prefer this over readi
 | Full parameter reference, tuning, log retention, alerts | [references/hsr-parameters.md](references/hsr-parameters.md) |
 | Multitier / multitarget, takeover, failback, upgrades, Active/Active | [references/hsr-operations.md](references/hsr-operations.md) |
 | HA/DR provider hooks, SAPHanaSR vs SAPHanaSR-angi, cluster integration | [references/hsr-cluster-integration.md](references/hsr-cluster-integration.md) |
+| **Scale-out**: identical-topology rule, host mapping, node-count ordering, majority maker | [references/hsr-scale-out.md](references/hsr-scale-out.md) |
 
 ## Cross-references
 
@@ -390,7 +400,8 @@ assuming this file is current.
 | **[SR6]** | **SAP Note 2391079** — restrictions for Active/Active (read enabled) | **[G]** |
 | **[SR7]** | **SAP Note 2480889** — history table restrictions under `logreplay` | **[G]** |
 | **[SR8]** | **SAP Note 2980989** — How-To: full data shipment for a single volume/service | **[G]** |
-| **[SR9]** | **SAP Note 2400007** — log retention / `logshipping_max_retention_size` | **[G]** |
+| **[SR9]** | **SAP Note 2400007** — log retention / `logshipping_max_retention_size`; also SAP HANA runtime dumps | **[G]** |
+| **[SR12]** | **SAP Note 2315257** — no host mapping from `-sr_state` on an offline HANA | **[G]** |
 | **[SR10]** | SUSE — *What is SAPHanaSR-angi?* and *How to upgrade to SAPHanaSR-angi*, `suse.com/c/` | **[V]** — angi vs classic differences |
 | **[SR11]** | Red Hat — *Upgrading SAP HANA HA setup to the new generation of resource agents*, RHEL for SAP Solutions 9 | **[G]** |
 

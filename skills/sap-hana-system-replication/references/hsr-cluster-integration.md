@@ -1,5 +1,8 @@
 # HA/DR provider hooks and cluster integration
 
+**Scale-out clusters have extra requirements** (third site, majority maker, odd node count) — see
+[hsr-scale-out.md](hsr-scale-out.md) §6.
+
 HSR on its own gives you **replication, not failover**. Nothing promotes a secondary automatically
 unless a cluster does it. This file covers the hook API HANA exposes and the two resource-agent
 generations that consume it.
@@ -98,6 +101,7 @@ of resource agents* (RHEL for SAP Solutions 9). **[G]**
 | help.sap.com — *Hook Methods*, SAP HANA Platform | **[G]** |
 | SUSE — *What is SAPHanaSR-angi?* / *How to upgrade to SAPHanaSR-angi* (`suse.com/c/`) | **[V]** |
 | SUSE — *SAP HANA SR Scale-Up Performance Optimized / Cost Optimized* best-practice guides (`documentation.suse.com/sbp/`) | **[G]** |
+| SUSE — `SAPHanaSR-ScaleOut(7)` man page; *SAPHanaSR-ScaleOut: Automating SAP HANA System Replication for Scale-Out Installations* | **[G]** |
 | `susHanaSR.py(7)`, `SAPHanaSR_upgrade_to_angi(7)` man pages | **[G]** |
 | Red Hat — *Deploying SAP HANA Scale-Up/Scale-Out System Replication HA*, RHEL for SAP Solutions 9 | **[G]** |
 

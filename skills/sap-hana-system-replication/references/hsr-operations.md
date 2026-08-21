@@ -41,6 +41,8 @@ initial sync time  >  backup size × compression factor / available bandwidth   
 ```
 
 In **scale-out**, the total is the **maximum** of the per-host times, not the sum. **[V]**
+**Scale-out has its own rules** — identical topology, host mapping, and a node-count ordering that
+inverts between add and remove: [hsr-scale-out.md](hsr-scale-out.md).
 
 ---
 
