@@ -130,6 +130,7 @@ sap-basis-ops/
     ├── sap-sscr-keys/               # SSCR developer & object keys (and when they're not needed)
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
     ├── sap-software-download/        # Software Center: find/qualify files, SP queues, checksums
+    ├── sap-hana-system-replication/ # HSR: setup, takeover, failback, multitier/multitarget
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
@@ -143,7 +144,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 19 skills.
+Phases 1 & 2 complete — 20 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.
@@ -192,6 +193,11 @@ Phases 1 & 2 complete — 19 skills.
   verified by fetching 7 support packages unattended, all checksums matching.
 - ✅ `sap-backup-recovery` — backup types + recovery types (most-recent / PITR / specific), log-mode
   prerequisites, and per-DB restore/recover commands (HANA/Oracle/ASE/Db2/MaxDB/SQL Server).
+- ✅ `sap-hana-system-replication` — HSR end to end: the full `hdbnsutil` command table verbatim from the
+  SR Guide (which side, online vs offline), replication modes vs operation modes, the **version matrix**
+  gating every feature from HANA 1.0 SPS 09 through 2.0 SPS 08, multitier/multitarget, takeover with
+  handshake, failback, `systemReplicationStatus.py` / `landscapeHostConfiguration.py` return codes, and
+  HA/DR provider hooks incl. the **SAPHanaSR → SAPHanaSR-angi** breaking change.
 
 - ✅ `sap-compliance-docs` — governance & audit evidence: the Trust Center **Compliance Finder** and its
   four dimensions (offering / **compliance entity** / assessment period / region), the certification
