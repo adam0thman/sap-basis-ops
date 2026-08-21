@@ -191,12 +191,13 @@ if you start from certain Db2 10.5 minimum Fix Pack levels. Otherwise the standb
   **Different technologies; no commands transfer.**
 - **`sap-space-reclaim`** — Db2 `FODC_*` diagnostic directories and log-archive space.
 
-**The other four database HA/DR skills — different technologies, no commands transfer:**
+**The other five database HA/DR skills — different technologies, no commands transfer:**
 
 - **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
 - **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
 - **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
+- **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 
 ---
 ## Execution discipline (non-negotiable)

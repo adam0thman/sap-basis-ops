@@ -219,15 +219,15 @@ Do this after initial setup **and after any change** to the landscape.
 ## Cross-references
 - **`sap-backup-recovery`** — SQL Server backup/restore; the `NORECOVERY` restores that seed replicas.
 - **`sap-db-command-reference`** — SQL Server service control, `sqlcmd`, Windows specifics.
-  — the other four. **Different technologies; no commands transfer.**
 - **`sap-system-lifecycle`** — stopping application servers before AlwaysOn node configuration.
 
-**The other four database HA/DR skills — different technologies, no commands transfer:**
+**The other five database HA/DR skills — different technologies, no commands transfer:**
 
 - **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
 - **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
 - **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
+- **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 
 ---
 ## Execution discipline (non-negotiable)

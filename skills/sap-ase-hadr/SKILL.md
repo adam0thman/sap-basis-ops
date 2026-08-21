@@ -197,12 +197,13 @@ This list kills more designs than any other page in the guide. **[V]**
 - **`sap-backup-recovery`** — ASE dump/load; loading from an external dump into an HADR system.
 - **`sap-health-triage`** — is the instance up at all before you blame replication.
 
-**The other four database HA/DR skills — different technologies, no commands transfer:**
+**The other five database HA/DR skills — different technologies, no commands transfer:**
 
 - **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
 - **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
+- **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 
 ---
 ## Execution discipline (non-negotiable)

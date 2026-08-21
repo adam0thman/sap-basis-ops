@@ -168,12 +168,13 @@ check the RMAN deletion policy accounts for the standby's needs.
   **Different technologies; no commands transfer.**
 - **`sap-space-reclaim`** — Oracle ADR `cdump`, archive-log space, and the retention that causes ORA-16724.
 
-**The other four database HA/DR skills — different technologies, no commands transfer:**
+**The other five database HA/DR skills — different technologies, no commands transfer:**
 
 - **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
 - **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
+- **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 
 ---
 ## Execution discipline (non-negotiable)

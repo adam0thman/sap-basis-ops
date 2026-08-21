@@ -255,15 +255,14 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 - **`sap-db-command-reference`** — `HDB start/stop`, `hdbsql`, HANA paths and the `<sid>adm` rules.
 - **`sap-health-triage`** — is the system up at all, before you blame replication.
 - **`sap-space-reclaim`** — HANA crashdump/rtedump files, and log volumes filled by retained segments.
-  Replication-Server-based, driven by `sap_*` RMA commands. No HSR command transfers.
-  only, no logical standby); Note 105047 governs, not Oracle's docs.
 
-**The other four database HA/DR skills — different technologies, no commands transfer:**
+**The other five database HA/DR skills — different technologies, no commands transfer:**
 
 - **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
 - **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
+- **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 
 ---
 ## Execution discipline (non-negotiable)

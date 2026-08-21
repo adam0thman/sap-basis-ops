@@ -45,6 +45,7 @@ database using database-specific tools or commands."* This skill is that databas
 - **`sap-oracle-dataguard`** — Oracle Data Guard: physical standby, DGMGRL, protection modes.
 - **`sap-db2-hadr`** — Db2 HADR: sync modes, VIP vs ACR, SA MP / Pacemaker.
 - **`sap-sqlserver-alwayson`** — SQL Server Always On: availability groups, listener, SWPM node config.
+- **`sap-maxdb-ha`** — MaxDB/liveCache HA: Hot Standby, shadow database, cluster failover.
 
 ## Execution discipline (non-negotiable)
 
