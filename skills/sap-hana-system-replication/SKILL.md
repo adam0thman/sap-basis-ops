@@ -250,16 +250,20 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 | **Scale-out**: identical-topology rule, host mapping, node-count ordering, majority maker | [references/hsr-scale-out.md](references/hsr-scale-out.md) |
 
 ## Cross-references
-
 - **`sap-backup-recovery`** — the data backup that must precede `-sr_enable`; root-key handling
   (`hdbnsutil -backupRootKeysAndSettings`) when LSS or a KMS is in play.
 - **`sap-db-command-reference`** — `HDB start/stop`, `hdbsql`, HANA paths and the `<sid>adm` rules.
 - **`sap-health-triage`** — is the system up at all, before you blame replication.
 - **`sap-space-reclaim`** — HANA crashdump/rtedump files, and log volumes filled by retained segments.
-- **`sap-ase-hadr`** — the ASE equivalent (HADR / Always-On). **Different technology entirely** —
   Replication-Server-based, driven by `sap_*` RMA commands. No HSR command transfers.
-- **`sap-oracle-dataguard`** — the Oracle equivalent. SAP *restricts* Data Guard (physical standby
   only, no logical standby); Note 105047 governs, not Oracle's docs.
+
+**The other four database HA/DR skills — different technologies, no commands transfer:**
+
+- **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
+- **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
+- **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
+- **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 
 ---
 ## Execution discipline (non-negotiable)

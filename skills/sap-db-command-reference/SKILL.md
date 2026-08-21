@@ -43,6 +43,8 @@ database using database-specific tools or commands."* This skill is that databas
 - **`sap-hana-system-replication`** — HANA HSR: `hdbnsutil`, replication/operation modes, takeover.
 - **`sap-ase-hadr`** — ASE HADR / Always-On: RMA `sap_*` commands, Fault Manager, split-brain check.
 - **`sap-oracle-dataguard`** — Oracle Data Guard: physical standby, DGMGRL, protection modes.
+- **`sap-db2-hadr`** — Db2 HADR: sync modes, VIP vs ACR, SA MP / Pacemaker.
+- **`sap-sqlserver-alwayson`** — SQL Server Always On: availability groups, listener, SWPM node config.
 
 ## Execution discipline (non-negotiable)
 

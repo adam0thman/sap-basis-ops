@@ -133,6 +133,8 @@ sap-basis-ops/
     ├── sap-hana-system-replication/ # HSR: setup, takeover, failback, multitier/multitarget
     ├── sap-ase-hadr/             # ASE HADR/Always-On: RMA sap_* commands, Fault Manager, split-brain
     ├── sap-oracle-dataguard/     # Data Guard: physical standby, DGMGRL, protection modes
+    ├── sap-db2-hadr/             # Db2 HADR: sync modes, VIP vs ACR, SA MP/Pacemaker
+    ├── sap-sqlserver-alwayson/   # Always On: availability groups, listener, SWPM node config
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
@@ -146,7 +148,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 22 skills.
+Phases 1 & 2 complete — 24 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.

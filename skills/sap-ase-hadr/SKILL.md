@@ -193,12 +193,16 @@ This list kills more designs than any other page in the guide. **[V]**
 | Installation, Fault Manager, failover procedures, rolling upgrade, SSL, monitoring | [references/ase-hadr-operations.md](references/ase-hadr-operations.md) |
 
 ## Cross-references
-
 - **`sap-db-command-reference`** — ASE start/stop, `isql`, `$SYBASE` environment, the `sybase`/`syb<sid>` OS user.
 - **`sap-backup-recovery`** — ASE dump/load; loading from an external dump into an HADR system.
-- **`sap-hana-system-replication`** — the HANA equivalent. **Different technology — do not transfer commands.**
 - **`sap-health-triage`** — is the instance up at all before you blame replication.
-- **`sap-oracle-dataguard`** — the Oracle equivalent (physical standby, DGMGRL, protection modes).
+
+**The other four database HA/DR skills — different technologies, no commands transfer:**
+
+- **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
+- **`sap-oracle-dataguard`** — Oracle Data Guard (physical standby, DGMGRL).
+- **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
+- **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 
 ---
 ## Execution discipline (non-negotiable)

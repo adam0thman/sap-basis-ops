@@ -163,12 +163,17 @@ check the RMAN deletion policy accounts for the standby's needs.
 | Setup outline, protection-mode changes, switchover/failover runbooks, monitoring queries, standby backups | [references/dataguard-operations.md](references/dataguard-operations.md) |
 
 ## Cross-references
-
 - **`sap-backup-recovery`** — RMAN, BR*Tools, Oracle version matrix, backup encryption/TDE keys.
 - **`sap-db-command-reference`** — Oracle start/stop, `sqlplus`, `ora<sid>` / `<sid>adm` users.
-- **`sap-hana-system-replication`** and **`sap-ase-hadr`** — the HANA and ASE equivalents.
   **Different technologies; no commands transfer.**
 - **`sap-space-reclaim`** — Oracle ADR `cdump`, archive-log space, and the retention that causes ORA-16724.
+
+**The other four database HA/DR skills — different technologies, no commands transfer:**
+
+- **`sap-hana-system-replication`** — HANA System Replication (`hdbnsutil`, HSR).
+- **`sap-ase-hadr`** — ASE HADR / Always-On (Replication Server, RMA `sap_*`).
+- **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
+- **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 
 ---
 ## Execution discipline (non-negotiable)
