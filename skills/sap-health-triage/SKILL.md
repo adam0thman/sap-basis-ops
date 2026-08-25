@@ -284,6 +284,7 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
   category map marking which functions are read-only vs state-changing), the read-only diagnostic
   catalog and the `service/protectedwebmethods` detail:
   [references/diagnostics-catalog.md](references/diagnostics-catalog.md).
+- **`sap-kernel-patch`** — during a Rolling Kernel Switch, `dpmon` must be started from the **local instance** directory, not the central `exe`.
 
 ## Execution discipline (non-negotiable)
 
