@@ -201,6 +201,7 @@ SAP Help *Add Hosts Using SAP Host Agent* **[G]**.
 - **`sap-space-reclaim`** — HANA crashdump/rtedump files; data-volume reclaim.
 - **`sap-health-triage`** — do the ordinary checks before reaching for an expert tool.
 - **`sap-troubleshooting`** — runtime dumps as an SAP-support artefact.
+- **`sap-hana-xsa`** — XS Advanced operations; `hdblcm` is what installs and updates it.
 
 ---
 

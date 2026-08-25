@@ -205,7 +205,7 @@ Named here so the boundary is explicit rather than implied. All **[G]**.
 | Tool | Domain | Covered? |
 |---|---|---|
 | **`btp`**, **`cf`**, **`mbt`**, MultiApps plugin | BTP account + CF runtime + MTA | **This skill** |
-| `xs` | **XS Advanced** on on-prem HANA — *superficially similar to `cf`, different platform* | ✗ |
+| `xs` | **XS Advanced** on on-prem HANA — *superficially similar to `cf`, different platform* | ✅ **`sap-hana-xsa`** |
 | `kyma` | Kyma / Kubernetes runtime on BTP | ✗ |
 | `cds` | SAP CAP development | ✗ |
 | `ui5` | UI5 Tooling | ✗ |
@@ -219,7 +219,7 @@ Named here so the boundary is explicit rather than implied. All **[G]**.
 `hdbnsutil`, `hdbsql`, `hdbuserstore`, BR\*Tools, `dbmcli`, `isql`, `sqlcmd`, `db2pd`, `db2haicu`,
 `niping`, `dpmon`, `jcmon`, `saposcol`, `saprouter`, `sapcpe`.
 
-> **`xs` vs `cf` is a genuine trap.** The XS Advanced CLI mimics Cloud Foundry's command shape
+> **`xs` vs `cf` is a genuine trap — now covered in `sap-hana-xsa`.** The XS Advanced CLI mimics Cloud Foundry's command shape
 > (`xs login`, `xs apps`, `xs push`) but administers **XSA on an on-premise HANA system**, not BTP.
 > Commands are not interchangeable and the platforms are unrelated. If a landscape has both, be
 > explicit about which one a runbook means.

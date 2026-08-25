@@ -263,6 +263,7 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 - **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
+- **`sap-hana-xsa`** — XSA cannot be installed from scratch into an existing HSR setup, and app updates go to the primary only.
 
 ---
 ## Execution discipline (non-negotiable)

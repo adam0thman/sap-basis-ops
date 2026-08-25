@@ -196,6 +196,7 @@ is good for interactive use and means automation needs a deliberate approach, no
 - **`sap-compliance-docs`** — BTP service entitlements map to Service Description Guides.
 - **`sap-software-download`** — where SAP delivers CLI binaries.
 - **`sap-db-command-reference`** — the on-premise counterpart to this file.
+- **`sap-hana-xsa`** — the `xs` CLI for XS Advanced on on-prem HANA. **Looks like `cf`, different platform.**
 
 ---
 
