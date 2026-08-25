@@ -7,7 +7,7 @@ description: >-
   Covers sapevt syntax and the pf=/name=/nr= addressing forms, why external commands are a privilege
   boundary and must start with Y or Z, the S_LOG_COM authorization object, common SAPXPG failures
   ("Starting external program SAPXPG failed", "Can't exec external program"), and running sapinst
-  unattended with an inifile. Use for "sapevt", "raise SAP event from script", "sapxpg", "SM49",
+  unattended with an inifile. `sapevt` doubles as the out-of-band way to trigger work when nobody can log on (it needs no dialog work process), while `sapxpg` explicitly does NOT — it is driven by the ABAP system. Use for "sapevt", "trigger job when SAP GUI is down",, "raise SAP event from script", "sapxpg", "SM49",
   "SM69", "external command failed", "SXPG_COMMAND_EXECUTE", "sapinst", "SWPM unattended".
   Linux/Windows/AIX.
 ---
@@ -24,6 +24,28 @@ each is therefore a **privilege boundary** worth treating carefully.
 | **`sapinst`** | — | The **installation engine** underneath SWPM |
 
 Marks: **[V]** verified, **[G]** cited but not read in full.
+
+---
+
+## 0. These are also the fallback path when the system is jammed
+
+Beyond their everyday use, two of these tools matter because they **do not need a free ABAP work
+process**:
+
+| Tool | Out-of-band role |
+|---|---|
+| **`sapevt`** | **Trigger work without logging in.** It talks to the message server / background scheduler, not to a dialog work process — so it can release a job when SAP GUI cannot log on |
+| **`sapinst`** | Irrelevant during an incident — listed here only so the boundary is clear |
+| **`sapxpg`** | ⚠️ **Not a fallback.** It is *driven by* the ABAP system (SM49/SM69/`SXPG_COMMAND_EXECUTE`), so a jammed ABAP stack means `sapxpg` cannot be invoked either |
+
+> **Do not reach for `sapxpg` during a jam.** It is the SAP → OS direction and needs a working work
+> process to start it. The out-of-band *diagnostic* channel is `sapcontrol` and `dpmon`
+> (see **`sap-health-triage` §0**); `sapevt` is the out-of-band *action* channel.
+
+**Practical use during an incident:** if the jam is caused by a flood of event-driven jobs, raising
+further events with `sapevt` makes it worse — check SM37 before triggering. Conversely, if a job
+*should* have started and did not, `sapevt` lets you release it without a dialog logon once capacity
+is back.
 
 ---
 
@@ -155,6 +177,7 @@ rather than reusing an old copy, because it carries the current product definiti
 - **`sap-software-download`** — obtaining current SWPM/SAPCAR.
 - **`sap-system-lifecycle`** — `sapcontrol`, `sapstartsrv`, and the Host Agent that `sapxpg` depends on.
 - **`sap-log-reference`** — `dev_evt` and the work-directory traces these tools write.
+- **`sap-health-triage`** — **§0 out-of-band path** when RFC/work processes are jammed; `sapcontrol` and `dpmon` are the diagnostic side of what this skill covers.
 
 ---
 

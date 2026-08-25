@@ -146,6 +146,7 @@ SAP system is up. If `sapcontrol` can't reach an instance, check `sapstartsrv` /
 - **Is it healthy / first-response triage:** `sap-health-triage`.
 - **Full `sapcontrol` function catalog, instance-type glossary, and per-OS boot wiring**
   (systemd / `/etc/inittab` sapinit / Windows services): [references/sapcontrol-and-order.md](references/sapcontrol-and-order.md).
+- **`sap-health-triage` §0** — if the system will not respond at all, use the out-of-band ladder before deciding to restart.
 
 ## Execution discipline (non-negotiable)
 

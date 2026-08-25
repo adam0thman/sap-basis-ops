@@ -137,6 +137,7 @@ If you open an incident, attach evidence rather than description:
 - **Recent change suspected:** [sap-transport-mgmt](../sap-transport-mgmt/SKILL.md) ·
   [sap-kernel-patch](../sap-kernel-patch/SKILL.md).
 - **DB-side analysis:** [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
+- **`sap-health-triage` §0** — the **out-of-band escalation ladder** for a jammed system: `sapcontrol` works when the ABAP stack cannot answer, `dpmon` when `sapstartsrv` cannot.
 
 ## Execution discipline (non-negotiable)
 

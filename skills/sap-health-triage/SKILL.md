@@ -5,7 +5,7 @@ description: >-
   up, is it healthy, and if not, why. Uses SAPControl's read-only diagnostics (GetProcessList, extract
   the SM21 syslog via ABAPReadSyslog, work processes via ABAPGetWPTable, dev traces via
   ListDeveloperTraces/ReadDeveloperTrace, CCMS alerts via GetAlertTree), the sappfpar profile/memory
-  validator, and OS-level checks (disp+work, dpmon, filesystem). Use for "is <SID> up/healthy?",
+  validator, and OS-level checks (disp+work, dpmon, filesystem). **Also the out-of-band fallback when the system is jammed**: `sapstartsrv` is a separate OS process, so `sapcontrol` still returns the work-process table (SM50), the cross-instance table (SM66), the dispatcher queues and the syslog (SM21) when SAP GUI will not log on and RFC hangs; `dpmon` reads shared memory when even `sapstartsrv` is unresponsive. Use for "is <SID> up/healthy?", "all work processes occupied", "cannot log on to SAP", "RFC hangs", "system jammed", "PRIV mode", "dispatcher queue full",,
   "verify the start worked", "why won't it start", "check the syslog / traces / work processes / profile
   parameters". Linux/Windows/AIX. Cited to help.sap.com / SAP Notes.
 ---
@@ -22,6 +22,127 @@ Health checks don't change state, so the full stop/delete guardrails don't apply
 **Identify** the SID/host/instance before running, and treat any command that *writes* (none here) with
 the repo guardrails. Reading another system's syslog/traces is still accessing that system — confirm you
 have the right SID.
+
+---
+
+## 0. When the system is jammed — the out-of-band path
+
+**Read this first if SAP GUI will not log on, SM50/SM21 are unreachable, or RFC calls hang.**
+
+> ## Why `sapcontrol` still answers when the system does not
+>
+> **`sapstartsrv` is a separate operating-system process.** It is not an ABAP work process, it does
+> not queue behind the dispatcher, and it does not need a free dialog work process to serve a
+> request. It reads the instance's **shared memory** and files directly and answers over its own
+> SOAP/HTTP port (`5<nr>13` / `5<nr>14`).
+>
+> **That is the whole reason this path exists:** when every work process is occupied and the
+> dispatcher queue is full, the ABAP stack cannot answer *anything* — but `sapcontrol` can still tell
+> you the work-process table, the syslog and the queue depth. It is your **out-of-band** channel, the
+> equivalent of a lights-out console.
+
+### The escalation ladder
+
+Work **down** this ladder. Each rung depends on less of the system than the one above it.
+
+| # | Channel | Depends on | Still works when… |
+|---|---|---|---|
+| 1 | **SAP GUI** — SM50, SM21, SM66, ST22 | A free **dialog work process** | Normal operation |
+| 2 | **RFC** from outside | A free work process + gateway | GUI is slow but the system runs |
+| 3 | **`sapcontrol`** | Only **`sapstartsrv`** | 🔑 **All work processes jammed, GUI dead, RFC hanging** |
+| 4 | **`dpmon`** | Only **shared memory** on the host | `sapstartsrv` itself is unresponsive |
+| 5 | **OS**: `ps`, `ipcs`, dev traces on disk | Only the OS | The instance is wedged or half-dead |
+| 6 | **`sapevt`** (out-of-band *action*) | `sapstartsrv`/profile | You must trigger work without logging in |
+
+**Rungs 3–6 are `sap-health-triage` + `sap-os-executables`.** Treat them as the *verification and
+recovery* path when the normal channels are gone — not as exotic tooling.
+
+### Rung 3 — everything you need from `sapcontrol` with the ABAP stack jammed
+
+```bash
+# as <sid>adm. Add -host/-user only if running remotely.
+
+# 1. Are the processes even alive? (disp+work, gwrd, icman, ms)
+sapcontrol -nr <nr> -function GetProcessList
+
+# 2. THE work-process table — this is SM50 without needing SM50
+sapcontrol -nr <nr> -function ABAPGetWPTable
+
+# 3. Across every instance in the system — this is SM66 without SM66
+sapcontrol -nr <nr> -function ABAPGetSystemWPTable
+
+# 4. How deep are the dispatcher queues? (a full DIA queue is the smoking gun)
+sapcontrol -nr <nr> -function GetQueueStatistic
+
+# 5. The syslog — this is SM21 without SM21
+sapcontrol -nr <nr> -function ABAPReadSyslog
+
+# 6. Traces, without needing a filesystem path
+sapcontrol -nr <nr> -function ListDeveloperTraces
+sapcontrol -nr <nr> -function ReadDeveloperTrace dev_disp 0     # 0 = whole file
+
+# 7. CCMS alerts
+sapcontrol -nr <nr> -function GetAlertTree
+```
+
+**Reading `ABAPGetWPTable` when everything is jammed** — the columns that matter:
+
+| What you see | What it means |
+|---|---|
+| Every **DIA** process `Running`, none `Waiting` | Genuinely saturated — find the long runners |
+| Several in **`PRIV`** mode | Processes bound to a user and **not returned to the pool** — classic memory-driven jam |
+| Status `Stopped`, reason **`CPIC`/`RFC`** | Blocked on an outbound call — often a dead partner system or SAProuter |
+| A long-running process with the **same PID over successive calls** | A stuck process — candidate for termination |
+| **`GetQueueStatistic`** DIA queue near max | Requests are piling up behind the jam |
+
+> **`PRIV` mode is the pattern worth recognising.** A dialog process that exceeds its memory quota
+> goes into private mode and stays bound to one user until the transaction ends. Enough of them and
+> the instance has no usable dialog capacity while `GetProcessList` still reports everything
+> "GREEN" — **the processes are running; they are just not available.** Never conclude "healthy" from
+> `GetProcessList` alone during a jam.
+
+### Rung 4 — `dpmon`, when even `sapstartsrv` will not answer
+
+`dpmon` reads the dispatcher's **shared memory** on the host, so it does not need `sapstartsrv` at
+all:
+
+```bash
+dpmon pf=/usr/sap/<SID>/SYS/profile/<SID>_<INSTANCE>_<host>
+```
+
+It is menu-driven; the work-process list and the queue statistics are the two screens that matter,
+and they show the same picture as SM50/SM51 straight from memory.
+
+> Use `dpmon` when `sapcontrol` times out or returns `DpAttachStartService failed` (SAP KBA
+> **2368478**) — that error means the start service could not attach to the dispatcher, which is
+> itself a finding.
+
+### Recovery — and its guardrail
+
+> ## 🛑 Terminating a work process is a data-affecting action
+>
+> Cancelling or killing a work process **rolls back whatever it was doing**, and can leave update
+> records, locks or a background job in an inconsistent state. It is legitimate emergency practice,
+> but it is **not** a diagnostic step.
+>
+> **Identify the process and capture evidence first** — `ABAPGetWPTable`, the queue statistic, and a
+> trace of the offending process. Then get an explicit decision to terminate, naming the SID and the
+> process. The execution discipline below applies in full: a jammed production system is exactly the
+> situation where people skip confirmation and regret it.
+
+Where the ABAP stack is reachable at all, prefer SM50 → *Cancel without core*. At OS level, killing
+the PID from `ABAPGetWPTable`/`dpmon` is the blunt equivalent — the dispatcher will start a
+replacement work process.
+
+**Before you kill anything, rule out the cheap causes:**
+
+- **Is the database up?** A hung DB looks exactly like a jammed application server. Check the DB
+  layer first — `sap-db-command-reference`.
+- **Is it an outbound dependency?** Work processes stuck in `CPIC`/`RFC` are waiting on *something
+  else*; killing them locally fixes nothing and the jam returns.
+- **Is the filesystem full?** `/usr/sap`, the DB log area, or `/tmp` filling up jams a system in ways
+  that look like a work-process problem — `sap-space-reclaim`.
+- **Is it a lock escalation?** Check enqueue via `GetQueueStatistic` and the enqueue log.
 
 ---
 

@@ -162,6 +162,11 @@ and shows up in `cf mta-ops` / `dmol`.
 **Rule of thumb:** if it exists *before* there is a runtime — accounts, entitlements, users — it is
 `btp`. If it runs *inside* the runtime, it is `cf`.
 
+> **One login covers one global account.** If your S-user reaches several, the interactive login
+> lists them all but you select one, and every command then runs in it. To work in more than one at
+> the same time, point each shell at its own config file via **`BTP_CLIENTCONFIG`** — see
+> [references/btp-cli-reference.md](references/btp-cli-reference.md) §2a. **[V]**
+
 ---
 
 ## 4. Scripting

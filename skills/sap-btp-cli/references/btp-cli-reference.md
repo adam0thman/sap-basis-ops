@@ -67,6 +67,69 @@ Use `--format json` in automation; use `--verbose` when something is wrong.
 
 ---
 
+## 2a. One login = one global account — and how to run several
+
+> **"Log in with the btp CLI is on global account level."** **[V]**
+
+If your S-user has access to several global accounts, one authentication **surfaces** them all —
+*"in the interactive login, after successful authentication, the btp CLI will offer all of your
+global accounts so you can select the one to log in to"* **[V]** — but you are logged in to **one**.
+*"All commands are executed in this global account, unless you provide a subaccount or directory ID
+with the command."* **[V]**
+
+```bash
+btp login --subdomain <global-account-subdomain>   # skip the picker
+```
+
+The subdomain comes from your operator, or from the global account's page in the cockpit.
+
+### Running several global accounts at once
+
+A login stores a **session token in a local configuration file** **[V]**:
+
+| OS | Default `config.json` |
+|---|---|
+| Windows | `C:\Users\<username>\AppData\Roaming\SAP\btp\config.json` |
+| macOS | `~/Library/Application Support/.btp/config.json` |
+| Linux | `~/.config/.btp/config.json` |
+
+Because the session lives in that file, **pointing different shells at different config files gives
+you genuinely parallel sessions** — SAP documents exactly this pattern for working in two places at
+once **[V]**:
+
+```bash
+# terminal A — global account 1
+export BTP_CLIENTCONFIG=~/.btp/ga1.json
+btp login --subdomain <ga1-subdomain>
+
+# terminal B — global account 2, at the same time
+export BTP_CLIENTCONFIG=~/.btp/ga2.json
+btp login --subdomain <ga2-subdomain>
+```
+
+or per command:
+
+```bash
+btp --config ~/.btp/ga1.json login
+btp --config ~/.btp/ga1.json list accounts/subaccount
+```
+
+> **`BTP_CLIENTCONFIG` was introduced in client version 2.14.** On older clients the variable is
+> **`SAPCP_CLIENTCONFIG`**. **[V]**
+
+**Practical shape for five global accounts:** one config file each, and a shell alias or function per
+account (`btp-cust-a`, `btp-cust-b`, …) that sets `BTP_CLIENTCONFIG` and calls `btp`. That removes the
+single most dangerous BTP-CLI mistake — running a `create`/`delete` against the account you were in
+last rather than the one you meant. Confirm with `btp --info` (target and context) before anything
+destructive.
+
+**Region caveat:** the CLI server URL is proposed at login (`https://cli.btp.cloud.sap/`, or
+`https://cpcli.cf.eu10.hana.ondemand.com` on clients ≤ 2.49.0) **[V]**. If an operator gave you a
+different server URL for a particular landscape, that is a `--url` value and belongs in that
+account's config too.
+
+---
+
 ## 3. Targeting
 
 The btp CLI keeps a **target** (global account / directory / subaccount) so commands do not each need
