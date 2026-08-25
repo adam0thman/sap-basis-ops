@@ -301,6 +301,14 @@ AWUS configuration, LSH, and frontend SNC troubleshooting:
 
 ---
 
+## Cross-references
+
+- **`sap-crypto-pse`** — the server-side PSE behind SNC (`sapgenpse`, `SECUDIR`, `cred_v2`); this
+  skill covers the **client** half (`SNC_LIB`, `sncname`, `sncqop`).
+- **`sap-saprouter`** — routing strings in connection definitions.
+- **`sap-software-download`** — obtaining SAP GUI and SAPSetup packages.
+- **`sap-os-executables`** — `sapinst`/SWPM, the provisioning counterpart to SAPSetup.
+
 ## OS note
 
 | | |

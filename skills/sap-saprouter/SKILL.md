@@ -83,6 +83,7 @@ Connection log via `-G`, trace via `-T` (level-2 trace for SAP support per **KBA
 
 - Traces / trace levels: [sap-log-reference](../sap-log-reference/SKILL.md).
 - Connectivity to the wider landscape: `sap-cloud-connector` (BTP), Web Dispatcher (HTTP front).
+- **`sap-crypto-pse`** — `sapgenpse` and the SAProuter certificate (`local.pse`) renewal.
 
 ## Execution discipline (non-negotiable)
 

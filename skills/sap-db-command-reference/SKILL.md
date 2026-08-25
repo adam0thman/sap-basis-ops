@@ -46,6 +46,10 @@ database using database-specific tools or commands."* This skill is that databas
 - **`sap-db2-hadr`** — Db2 HADR: sync modes, VIP vs ACR, SA MP / Pacemaker.
 - **`sap-sqlserver-alwayson`** — SQL Server Always On: availability groups, listener, SWPM node config.
 - **`sap-maxdb-ha`** — MaxDB/liveCache HA: Hot Standby, shadow database, cluster failover.
+- **`sap-hana-lifecycle-tools`** — `hdblcm` and `hdbcons`.
+- **`sap-os-executables`** — `sapevt`, `sapxpg`, `sapinst`.
+- **`sap-btp-cli`** — `btp` and `cf` for BTP.
+- **`sap-crypto-pse`** — `sapgenpse` / PSE management.
 
 ## Execution discipline (non-negotiable)
 
