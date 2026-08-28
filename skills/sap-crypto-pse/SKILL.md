@@ -168,6 +168,7 @@ failure.*
 - **`sap-cloud-connector`** — its own certificate stores for BTP connectivity.
 - **`sap-backup-recovery`** — key and credential recoverability.
 - **`sap-security-patch`** — CommonCryptoLib is itself patched; check its version.
+- **`sap-nw-java-pi`** — AS Java keystore lives in NWA; PI SOAP/HTTPS adapter failures are usually certificate-chain errors (same import-the-chain-first rule).
 
 ---
 

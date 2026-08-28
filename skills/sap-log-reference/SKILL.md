@@ -131,6 +131,7 @@ each of these.
   [sap-health-triage](../sap-health-triage/SKILL.md).
 - **Clean up / rotate these logs:** [sap-housekeeping](../sap-housekeeping/SKILL.md).
 - **DB start/stop/connect:** [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
+- **`sap-nw-java-pi`** — AS Java traces in context: `defaultTrace.trc`, `std_server<n>.out`, `dev_jcontrol`, and the NWA Log Viewer/Configuration route.
 
 ## Execution discipline (non-negotiable)
 

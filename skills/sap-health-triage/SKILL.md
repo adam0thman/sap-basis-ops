@@ -285,6 +285,7 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
   catalog and the `service/protectedwebmethods` detail:
   [references/diagnostics-catalog.md](references/diagnostics-catalog.md).
 - **`sap-kernel-patch`** — during a Rolling Kernel Switch, `dpmon` must be started from the **local instance** directory, not the central `exe`.
+- **`sap-nw-java-pi`** — the AS Java counterpart of §0: `J2EEGetProcessList2` (GetProcessList GREEN is not "Java is up"), jcmon, and the telnet shell on `5<nr>08`.
 
 ## Execution discipline (non-negotiable)
 

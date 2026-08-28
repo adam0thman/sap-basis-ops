@@ -138,6 +138,7 @@ If you open an incident, attach evidence rather than description:
   [sap-kernel-patch](../sap-kernel-patch/SKILL.md).
 - **DB-side analysis:** [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
 - **`sap-health-triage` §0** — the **out-of-band escalation ladder** for a jammed system: `sapcontrol` works when the ABAP stack cannot answer, `dpmon` when `sapstartsrv` cannot.
+- **`sap-nw-java-pi`** — PI/PO message triage (TBDL/HOLD/EOIO), adapter tracing, CPA cache; and the ESR/ID automation boundary.
 
 ## Execution discipline (non-negotiable)
 
