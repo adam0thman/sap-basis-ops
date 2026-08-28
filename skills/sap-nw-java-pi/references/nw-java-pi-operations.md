@@ -76,9 +76,14 @@ SPs; the raw telnet port is the dependable form.
   descriptors (`.jnlp`).
 - A workstation needs a matching **JRE/OpenJDK with Web Start support** (IcedTea-Web on newer
   JREs, since Oracle removed Web Start after Java 8).
-- Swing UI ⇒ no browser automation, no headless mode. Plan ESR/ID work as human tasks; what *can* be
-  scripted around them is the **CPA cache** side (§4 of the parent) and the Directory API
-  (`/dir/wsdl` Web services) for read access.
+- Swing UI ⇒ **the tools** cannot be browser-automated or run headless. Mapping design and
+  repository browsing are human tasks.
+- **The objects are a different matter.** The Integration Directory publishes SOAP services —
+  `CommunicationChannelInService` (`Query`/`Read`/`Create`/`Change`/`Delete`/`OpenForEdit`/`Revert`,
+  verified live) and siblings for other object types. So configuration *content* is scriptable even
+  though the *editor* is not. See parent §2a.
+- Note `/dir/wsdl` itself returned **500** on the test system — the per-service `?wsdl` endpoints are
+  the reliable discovery route, not a directory-wide WSDL listing. **[LV]**
 - `ESR/ID cannot be accessed — "Unable to load resource"`: Note 3085217. ABAP SPROXY cannot reach
   ESR: Note 3369551 / 2957501.
 

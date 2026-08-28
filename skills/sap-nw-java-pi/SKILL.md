@@ -5,9 +5,11 @@ description: >-
   NWA (/nwa) as the central admin UI, the J2EE sapcontrol functions (J2EEGetProcessList2,
   J2EEGetThreadList2), jcmon and the telnet admin shell on 5<nr>08 as out-of-band channels, the AS
   Java log/trace set (defaultTrace, std_server*.out, dev_jcontrol), and on the PI side PIMON,
-  Message Monitoring, the EOIO stuck-message decision tree, CPA cache (/CPACache/monitor.jsp),
-  adapter trace locations, and the hard boundary that ESR and Integration Directory are Java Web
-  Start clients a browser cannot drive. Includes the XPI Inspector retirement (Feb 2026). Use for
+  Message Monitoring, the EOIO stuck-message decision tree, CPA cache (/CPACache/monitor.jsp) and
+  adapter trace locations. Explains why JCo is the WRONG tool for AS Java (it is RFC-to-ABAP) and what
+  the real programmatic surfaces are: SOAP web services (AdapterMessageMonitoring with basic/SSL/
+  client-cert bindings, CommunicationChannel CRUD), monitor servlets over Basic auth, sapcontrol SOAP,
+  JMX/P4 and the telnet shell — so browser use is needed only for NWA and the Swing clients. Includes the XPI Inspector retirement (Feb 2026). Use for
   "AS Java", "NWA", "nwa logon", "PIMON", "PI message stuck", "To be delivered", "EOIO HOLD",
   "CPA cache refresh", "ESR", "Integration Directory", "defaultTrace", "server0", "jcontrol",
   "AS Java telnet", "adapter trace", "channel monitor". Cited to SAP Note 1514898 and live-verified
@@ -31,10 +33,13 @@ AS Java system** — marked **[LV]**. **[G]** = cited but not re-read in full.
 > | **ESR, Integration Directory, Config Tool, Visual Admin** | **Java Web Start / Swing** | 🚫 **No** — the browser only serves the `.jnlp` launcher; a local Java runtime runs the app |
 >
 > `/rep/start/index.jsp` and `/dir/start/index.jsp` returning HTTP 200 **[LV]** proves only that the
-> *launch pages* exist. Do not promise scripted ESR/ID work — repository browsing, mapping edits and
-> channel configuration are human-at-a-desktop tasks. Everything in the top row, however, is fully
-> scriptable, and the monitor servlets answer plain **HTTP Basic auth** **[LV]** — no session dance
-> needed.
+> *launch pages* exist — the **UIs** cannot be driven by a browser or headlessly.
+>
+> **But the UI is not the only door.** Integration Directory *content* has a **SOAP API** —
+> `CommunicationChannelInService` exposes `Create`/`Read`/`Change`/`Delete`/`Query`/`OpenForEdit`/
+> `Revert`, verified live **[LV]** (§2a). So "channel configuration is a desktop task" is **wrong for
+> the objects, right for the tool**. Mapping design and repository browsing remain human work;
+> channel and configuration objects are scriptable.
 
 ---
 
@@ -63,6 +68,73 @@ All on the Java HTTP port **`5<nr>00`** (instance 00 → 50000):
 **NWA paths that matter** (inside `/nwa`): *Troubleshooting → Logs and Traces → Log Viewer* and
 *Log Configuration*; *SOA → Monitoring → Message Monitoring* (the NWA route to the same monitor);
 *Troubleshooting → Security Troubleshooting Wizard* (see §5). **[V, Note 1514898]**
+
+---
+
+## 2a. Programmatic access — and why JCo is the wrong tool
+
+> ## 🛑 **JCo does not administer AS Java**
+>
+> SAP Java Connector speaks **RFC to an ABAP stack**. AS Java is not an RFC server — there is no
+> JCo destination that gets you a Java admin session. Handing a script JCo credentials buys you
+> nothing here.
+>
+> The confusion is understandable: PI's **IDoc_AAE and RFC adapters** do use JCo (`com.sap.mw.jco`,
+> `com.sap.conn.jco` appear in their trace locations). But that is the *adapter runtime* calling
+> **out** to ABAP systems — not you calling **in** to administer Java.
+
+**What is actually scriptable, in order of usefulness:**
+
+| # | Surface | Port | Auth | Verified |
+|---|---|---|---|---|
+| 1 | **SOAP web services** (below) | `5<nr>00` / `5<nr>01` | Basic **/ SSL / client cert** | **[LV]** |
+| 2 | **Monitor servlets** (`MessagingSystem`, `CPACache`, AFW scheduler) | `5<nr>00` | **Basic** | **[LV]** |
+| 3 | **`sapcontrol` SOAP web service** | `5<nr>13` / `5<nr>14` | Basic / none | **[G]** |
+| 4 | **JMX over P4** — what NWA and the old Visual Admin use underneath | `5<nr>04` | Java client only | **[G]** |
+| 5 | **Telnet admin shell** | `5<nr>08` | Interactive | **[G]** |
+
+**Browser genuinely required for only two things:** **NWA** (WebDynpro — needs a real session, curl
+gets a 302 into `FloorPlanApp` **[LV]**) and the **Swing clients** (ESR/ID GUI, Config Tool, Visual
+Admin).
+
+### The two APIs worth knowing **[LV]**
+
+```bash
+# 1. Message monitoring — the API behind PIMON's message search
+curl -su "$U:$P" "http://<host>:5<nr>00/AdapterMessageMonitoring/basic?wsdl"
+```
+
+Three binding ports are published, which is the interesting part **[LV]**:
+
+| Port | Endpoint |
+|---|---|
+| `basicPort` | `http://<host>:5<nr>00/AdapterMessageMonitoring/basic` |
+| `sslPort` | `https://<host>:5<nr>01/AdapterMessageMonitoring/ssl` |
+| **`clientCertPort`** | `.../AdapterMessageMonitoring/clientCert` |
+
+> **A client-certificate binding exists.** For unattended monitoring, that is the right auth —
+> no service password in a script or a `ps` listing. Certificate handling is `sap-crypto-pse`.
+
+```bash
+# 2. Integration Directory — communication channel CRUD
+curl -su "$U:$P" \
+  "http://<host>:5<nr>00/CommunicationChannelInService/CommunicationChannelInImplBean?wsdl"
+```
+
+Operations verified live **[LV]**: `Query`, `Read`, `Check`, `Create`, `CreateFromTemplate`,
+`Change`, `Delete`, `OpenForEdit`, `Revert`.
+
+> ⚠️ **`Change`, `Create` and `Delete` alter the Integration Directory.** `Query`/`Read` are the safe
+> pair for inventory and drift-detection; the mutating operations are change-controlled work that
+> normally goes through ID with an approval trail. A script that edits channels bypasses that trail —
+> and the change still needs a **CPA cache** update to take effect (§4).
+
+**Practical uses of the read side:** inventory every channel across environments, diff DEV/QA/PRD
+configuration, detect channels stopped outside a change window, feed monitoring. All read-only, all
+scriptable, no desktop Java anywhere.
+
+**Discovery:** not every service is deployed on every system — `/MessagingSystem/services/...` and
+`/mdt/messagemonitor` returned **404** on the test system **[LV]**. Probe for `?wsdl` before assuming.
 
 ---
 
@@ -348,7 +420,7 @@ assuming this file is current.
 | # | Source | Read |
 |---|---|---|
 | **[NJ1]** | **SAP Note 1514898** — *Troubleshooting SAP Process Orchestration / Integration*, v**112**, 17.08.2026, BC-XI-CON-AFW | **[V]** — trace flows, adapter locations, EOIO tree, CPA cache, XPI Inspector retirement |
-| **[NJ2]** | **Live verification** — PI **7.50** AS Java system (dev), 2026-08-31: URL surface, Basic-auth behaviour of monitor servlets, Messaging System monitor content | **[LV]** |
+| **[NJ2]** | **Live verification** — PI **7.50** AS Java system (dev), 2026-08-31: URL surface, Basic-auth behaviour of monitor servlets, Messaging System monitor content, **`AdapterMessageMonitoring` binding ports (basic/ssl/clientCert) and `CommunicationChannelInService` operation list** | **[LV]** |
 | **[NJ3]** | **SAP Note 3691989** — Security Troubleshooting Wizard XPI incidents | **[G]** |
 | **[NJ4]** | **SAP Note 2135741** — *Finding the Message Blocking an EOIO Sequence in the PI Adapter Engine* | **[G]** |
 | **[NJ5]** | **SAP Notes 710154 / 1020246 / 1783031** — thread dumps, Thread Dump Viewer, SAP JVM Profiler | **[G]** |
