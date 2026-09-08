@@ -180,23 +180,48 @@ Order, always: **verify programmatically → ask only what remains → never ass
 
 ### Prefer programmatic over manual or GUI
 
-**Work down this ladder. Take the highest rung that works, and do not skip a rung because you assume
-it is unavailable.**
+**Work down this ladder. Take the highest rung that does the job — and within that rung, the lowest
+privilege that suffices. Never skip a rung because you assume it is unavailable (see the burden of
+proof below).**
 
-| # | Approach | Why it ranks here |
-|---|---|---|
-| 1 | **RFC / BAPI** (`creds exec`, JCo, `sapnwrfc`) against ABAP | Typed, transactional, auditable in SM19/SM20, no screen state |
-| 2 | **OS CLI** — `sapcontrol`, `hdbsql`, `dbmcli`, `isql`, BR\*Tools, `tp`/`R3trans` | Scriptable, loggable, exact exit codes |
-| 3 | **SQL / DB API** — read-only against the DB layer | Precise, fast, no dialog work process consumed |
-| 4 | **HTTP endpoint / servlet** with Basic or client-cert auth | Scriptable; see the discovery rule below |
-| 5 | **SOAP / OData / REST service** | Same, plus a contract (`?wsdl`, `$metadata`) |
-| 6 | **Browser automation** (headless or in-app) | Session-based UIs only. Fragile across releases |
-| 7 | **Computer Use / screen driving** | **Last resort.** Not repeatable, not diffable, breaks on any UI change |
+| # | Path | Privilege | Notes |
+|---|---|---|---|
+| **1** | **REST / OData** — `GET` first | Narrowest. Scoped service user | Read-only by construction when you stay on `GET`. `$metadata` gives you the contract |
+| **2** | **SOAP / web service** | Scoped service user | Typed contract via `?wsdl`. Client-cert auth where offered — no password in a script |
+| **3** | **RFC / BAPI** (`creds exec`, JCo, `pyrfc`) | RFC user with `S_RFC` | **For ABAP *writes*, prefer this over 1–2**: BAPIs have real commit/rollback semantics and land in SM19/SM20 |
+| **4** | **OS shell as the *correct* user** → **DB utility** | ⚠️ Escalates — see below | The chain matters more than the rung |
+| **5** | **Browser automation** (headless or in-app) | Interactive user | Session-based UIs only. Fragile across releases |
+| **6** | **Computer Use / screen driving** | Interactive user | **Last resort.** Not repeatable, not diffable, breaks on any UI change |
+
+> ## ⚠️ Rung 4 is a chain, and each link widens the blast radius
+>
+> ```
+> ssh <host>                    ← host access
+>   → su - <sid>adm             ← SAP admin: can stop/start the system
+>   → su - ora<sid> / syb<sid>  ← DB owner: can drop data
+>   → sudo / root               ← everything
+>        → hdbsql | isql | dbmcli | sqlplus | db2   ← the actual command
+> ```
+>
+> **Stop at the least-privileged user that can run the command.** Most read-only checks need only
+> `<sid>adm`; DB utilities usually need the DB owner; **root is almost never the right answer** and
+> `saproot.sh` is the rare legitimate exception. Say which user you used and why.
+
+> ## Two axes, and they do not agree
+>
+> The ladder ranks by **automation quality** — repeatable, reviewable, loggable, diffable. Privilege
+> runs on a *different* axis and is **worst in the middle**: rung 4 (OS/root) can destroy a system,
+> while rung 6 (Computer Use) is merely an interactive user clicking. So Computer Use ranks last for
+> *reproducibility*, not because it is the most dangerous.
+>
+> **The practical rule: prefer the highest rung, but never escalate privilege to climb it.** A
+> read-only OData call beats an RFC that needs a write-capable user; an `<sid>adm` shell beats a root
+> shell. If climbing a rung requires more privilege than the task needs, stay where you are and say so.
 
 > ## 🛑 You must **demonstrate** the absence of a programmatic path, not assume it
 >
 > "There is no API for this" is a **finding that requires evidence**, not a default. Before dropping to
-> rung 6 or 7, actually probe:
+> rung 5 or 6, actually probe:
 >
 > - **HTTP status codes tell you the access mode.** `401` → Basic auth works, **scriptable**.
 >   `302` regardless of credentials → session UI, browser needed. `404` → not deployed. `503` →
