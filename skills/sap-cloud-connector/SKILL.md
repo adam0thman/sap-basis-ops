@@ -132,11 +132,36 @@ Order, always: **verify programmatically → ask only what remains → never ass
 
 ### Prefer programmatic over manual or GUI
 
-If a task can be done via **CLI, API, SQL or a report**, do it that way rather than GUI clicks, screen
-automation or Computer Use. Programmatic execution is repeatable, reviewable, loggable and diffable;
-screen-driving is none of those. Reach for the GUI or Computer Use only when there is **no programmatic
-path** (some SAP GUI-only transactions genuinely qualify) or when the user asks for it — and say which
-it is and why.
+**Work down this ladder. Take the highest rung that works, and do not skip a rung because you assume
+it is unavailable.**
+
+| # | Approach | Why it ranks here |
+|---|---|---|
+| 1 | **RFC / BAPI** (`creds exec`, JCo, `sapnwrfc`) against ABAP | Typed, transactional, auditable in SM19/SM20, no screen state |
+| 2 | **OS CLI** — `sapcontrol`, `hdbsql`, `dbmcli`, `isql`, BR\*Tools, `tp`/`R3trans` | Scriptable, loggable, exact exit codes |
+| 3 | **SQL / DB API** — read-only against the DB layer | Precise, fast, no dialog work process consumed |
+| 4 | **HTTP endpoint / servlet** with Basic or client-cert auth | Scriptable; see the discovery rule below |
+| 5 | **SOAP / OData / REST service** | Same, plus a contract (`?wsdl`, `$metadata`) |
+| 6 | **Browser automation** (headless or in-app) | Session-based UIs only. Fragile across releases |
+| 7 | **Computer Use / screen driving** | **Last resort.** Not repeatable, not diffable, breaks on any UI change |
+
+> ## 🛑 You must **demonstrate** the absence of a programmatic path, not assume it
+>
+> "There is no API for this" is a **finding that requires evidence**, not a default. Before dropping to
+> rung 6 or 7, actually probe:
+>
+> - **HTTP status codes tell you the access mode.** `401` → Basic auth works, **scriptable**.
+>   `302` regardless of credentials → session UI, browser needed. `404` → not deployed. `503` →
+>   deployed but stopped.
+> - **Look for a contract**: append `?wsdl`, `$metadata`, `/api`, `?sap-client=` and see what answers.
+> - **Ask the platform what it exposes**: `sapcontrol -function J2EEGetApplicationAliasList`,
+>   `hdbcons help`, `btp --help`, `xs help`, `<tool> -h`.
+> - **A Swing or WebDynpro *UI* being un-automatable does not mean the *objects* are.** The editor and
+>   the API are different doors — check for the second before declaring the first is the only one.
+>
+> Programmatic execution is repeatable, reviewable, loggable and diffable; screen-driving is none of
+> those. When you do drop to a lower rung, **say which rung you are on and what you probed** to rule
+> out the higher ones — so the user can correct you if they know of a path you missed.
 
 ### Ask how output should be handled
 
