@@ -132,6 +132,7 @@ that actually proves key management works:
 - **Connect / start-stop the DB (needed around a restore):** [sap-db-command-reference](../sap-db-command-reference/SKILL.md).
 - **Log/archive housekeeping (only after a good backup):** [sap-housekeeping](../sap-housekeeping/SKILL.md).
 - **DB logs to diagnose a failed restore:** [sap-log-reference](../sap-log-reference/SKILL.md) → db-logs.
+- **`sap-client-copy-accelerator`** — take a restore point before a native bypass load; `NOLOGGING` breaks recoverability of the loaded segments.
 
 ## Execution discipline (non-negotiable)
 

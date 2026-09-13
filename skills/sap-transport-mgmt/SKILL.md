@@ -138,6 +138,7 @@ In the system, re-schedule via **STMS → Import Overview** / report `RDDNEWPP` 
 - **DB reachable? (`R3trans -d`) / won't-start triage:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **Restart after kernel/transport-tool changes:** [sap-system-lifecycle](../sap-system-lifecycle/SKILL.md).
 - **`sap-os-executables`** — `sapevt`, `sapxpg` and `sapinst`, the other OS-level SAP executables.
+- **`sap-client-copy-accelerator`** — when a client copy stalls on one huge table; also covers `R3TR TABU` transports for RSCCEXPT-excluded tables.
 
 ## Execution discipline (non-negotiable)
 

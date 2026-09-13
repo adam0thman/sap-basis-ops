@@ -126,6 +126,7 @@ sap-basis-ops/
     ├── sap-housekeeping/             # reorg jobs, work-dir/audit/spool cleanup, cleanipc
     ├── sap-space-reclaim/           # what can be deleted, retention fixes, sized reclaim
     ├── sap-dormant-clients/         # assess & retire unused clients (000/001/066, sandboxes)
+    ├── sap-client-copy-accelerator/ # rescue a client copy stalled on one huge table (HANA SDA / Oracle dblink)
     ├── sap-transport-mgmt/           # OS-layer tp / R3trans, buffer, unconditional modes
     ├── sap-sscr-keys/               # SSCR developer & object keys (and when they're not needed)
     ├── sap-kernel-patch/             # kernel swap (SAPCAR/saproot.sh) + Host Agent update
@@ -155,7 +156,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 31 skills.
+Phases 1 & 2 complete — 32 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.

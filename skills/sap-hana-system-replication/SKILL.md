@@ -264,6 +264,7 @@ boxed layout. On multi-host and multitier systems it also prints the **host mapp
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 - **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
 - **`sap-hana-xsa`** — XSA cannot be installed from scratch into an existing HSR setup, and app updates go to the primary only.
+- **`sap-client-copy-accelerator`** — a bulk native load into an HSR primary replicates every row; watch secondary lag and log volume.
 
 ---
 ## Execution discipline (non-negotiable)

@@ -175,6 +175,7 @@ check the RMAN deletion policy accounts for the standby's needs.
 - **`sap-db2-hadr`** — Db2 HADR (`HADR_SYNCMODE`, SA MP / Pacemaker).
 - **`sap-sqlserver-alwayson`** — SQL Server Always On (availability groups, listener).
 - **`sap-maxdb-ha`** — MaxDB / liveCache (Hot Standby, shadow database, cluster failover).
+- **`sap-client-copy-accelerator`** — its Oracle path may reach for `NOLOGGING`, which `FORCE LOGGING` silently overrides on a Data Guard primary.
 
 ---
 ## Execution discipline (non-negotiable)
