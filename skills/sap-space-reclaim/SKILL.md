@@ -392,6 +392,13 @@ the discovery commands above are given for **Linux, AIX and Windows**, and `du` 
 
 ---
 
+## Cross-references
+
+- **`sap-housekeeping`** — the scheduled standard reorganization jobs that prevent most of this.
+- **`sap-backup-recovery`** — log and archive space, and why a delete without a backup plan is risky.
+- **`sap-client-copy-accelerator`** — a bulk delete/load leaves space that needs reclaiming afterwards.
+- **`sap-db-command-reference`** — the per-database utilities used for reclaim operations.
+
 ## Execution discipline (non-negotiable)
 
 ### The holy rule — nothing runs unbacked

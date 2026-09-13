@@ -342,6 +342,13 @@ ppc64), which [sap-kernel-patch](../sap-kernel-patch/SKILL.md) covers.
 
 ---
 
+## Cross-references
+
+- **`sap-kernel-patch`** — what to do with the kernel archives once downloaded; SP Stack Kernel vs hotfix.
+- **`sap-security-patch`** — the monthly Notes workflow that drives most download decisions.
+- **`sap-compliance-docs`** — entitlement and the Service Description Guide behind what you may download.
+- **`sap-sscr-keys`** — the sibling SAP for Me OData service, same authentication chain.
+
 ## Execution discipline (non-negotiable)
 
 ### The holy rule — nothing runs unbacked

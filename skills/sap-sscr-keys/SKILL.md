@@ -227,6 +227,13 @@ shell, which [sap-health-triage](../sap-health-triage/SKILL.md) covers per platf
 
 ---
 
+## Cross-references
+
+- **`sap-transport-mgmt`** — where object keys surface in practice: SPAU/SPDD after an upgrade.
+- **`sap-software-download`** — the sibling SAP for Me OData service and the same authentication chain.
+- **`sap-compliance-docs`** — the entitlement context for SAP for Me self-service.
+- **`sap-security-patch`** — SNOTE work that can prompt a developer-key request.
+
 ## Execution discipline (non-negotiable)
 
 ### The holy rule — nothing runs unbacked

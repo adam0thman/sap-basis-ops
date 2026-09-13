@@ -10,6 +10,8 @@ description: >-
   itself documents in Note 857973). Insists on diagnosing FIRST — read the tenant's own trace and
   prove the bottleneck is the ABAP copy framework, not the database — and on exhausting the supported
   levers (RSCCEXPT exclusions, RFC server group, parallel processes) before bypassing anything.
+  Gates the cross-database step on explicit user confirmation of licence eligibility — a remote source
+  or database link is never created until the user confirms they are entitled and accept the risk.
   Use this whenever a client copy is slow, stuck, hanging, aborting or has a multi-day ETA, and
   specifically for "client copy slow", "client copy taking too long", "SCC9 stuck on ACDOCA",
   "SCCL stuck", "client copy delete step aborts", "accelerate client copy", "speed up client copy",
@@ -52,11 +54,130 @@ Earn it:
 |---|---|---|
 | **1** | **Diagnose** — prove it is ABAP-side, not the DB (§1) | Bypassing a genuinely sick database makes things worse |
 | **2** | **Exhaust the supported levers** (§2) | Faster, reversible, supported. Often enough on its own |
-| **3** | **Only then bypass** for the specific table (§3–§6) | Scoped to one table, with verification |
+| **3** | **Get explicit licence confirmation** (§0a) | Cross-database access is a licence decision, and it is the user's to make |
+| **4** | **Only then bypass** for the specific table (§3–§6) | Scoped to one table, with verification |
 
 > ⚠️ **Never bypass a table you have not first proven is framework-bound.** A hung DB, a full
 > filesystem, an archiver stuck, or a lock wait all *look* like "the copy is slow" and none of them
 > is fixed by loading harder.
+
+---
+
+## 0a. Licence gate — STOP. Do not create a remote source or database link without explicit confirmation
+
+> ## 🛑 This is a hard stop, not a caution
+>
+> **Do not create a remote source, a virtual table, or a database link — and do not run the bypass —
+> until the user has explicitly confirmed, in their own words, that:**
+>
+> 1. **They are entitled** to use cross-database access on this system under its licence, and
+> 2. **They understand the consequences** of being wrong — a licence audit finding, and potentially a
+>    chargeable true-up.
+>
+> **Present the position in §0a first, then ask. Do not infer consent** from "go ahead", from the fact
+> that they asked for the acceleration, or from the system being non-production. Licence exposure does
+> not care which environment it happened in.
+>
+> **A usable form of the question:**
+>
+> > "This creates a `<remote source | database link>` from `<target>` to `<source>`, which is
+> > cross-database access. Under **Note 581312** that is permitted for *system administration*, but
+> > **not** for automated tooling, and **HANA entitlement is contractual** — it depends on your
+> > Service Description Guide, which I cannot read. **Can you confirm you are entitled to do this on
+> > this system, and that you accept the licence risk?** I will not create it until you do."
+>
+> **Record the answer** in the change record or ticket. If the user cannot confirm, that is a legitimate
+> outcome: fall back to the supported levers in §2, or to export/import — **do not proceed anyway**.
+>
+> This mirrors the production-safety gate in the execution discipline below. The reasoning is the same:
+> a decision with a cost the user carries is **theirs to make, explicitly, in advance**.
+
+The bypass touches **cross-database plumbing**, which is where restricted-use database licences bite.
+Neither mechanism costs an *extra option*, but both sit inside usage terms the user must own.
+
+### Oracle — the terms are explicit, and the distinction is who is driving
+
+**SAP Note 581312, *Oracle database: Licensing restrictions*** **[V]** quotes the SAP Price List
+(§C.11.1) directly. Two clauses decide this:
+
+> *"The customer shall only use the Oracle software **in connection with the SAP Software** and only
+> for the purposes of its own internal data processing."*
+
+> *"Direct access to the Oracle database is only allowed for tools from the areas of **system
+> administration and monitoring**."* **[V]**
+
+And then it lists, as **not allowed** for *other* software (its examples are reporting tools and
+*"external tools to create automatic SAP system copies"*) **[V]**:
+
+- Creating database users
+- Creating database segments
+- **Querying / changing / creating data in the database**
+- Using ODBC or other SAP-external access methods
+
+**Reading it honestly, both ways:**
+
+| Doing this | Position |
+|---|---|
+| **You, the DBA, running `sqlplus` to refresh a QA client** | Sits squarely in *"system administration"* — the explicitly permitted category. This is the case the technique is for. |
+| **`ABAP using database links`** | **Explicitly listed as a permitted interface** **[V]** |
+| **A third-party or home-grown product that automates system copies via direct DB access** | The clause names this pattern as **not allowed**. Productising this skill into a tool is a different licence question from running it by hand. |
+| **One-off migration** | *"The use of external software for database migration **is permitted**… as long as this is a **one-time process that will not be repeated**."* **[V]** |
+
+> **Where the line actually falls:** a human administrator refreshing a system is administration; a
+> repeatable automated pipeline that moves SAP data through direct DB access is closer to the
+> prohibited pattern. If you intend to schedule this, get it in writing.
+
+**No extra Oracle option is needed.** Note **740897** lists every option in the SAP-supplied Oracle
+licence (Partitioning, Advanced Compression, Data Guard, ASM, RAC…) — **database links are not among
+them because they are base Enterprise Edition** **[V]**. But watch the two that *are* chargeable and
+that this method can tempt you into:
+
+| Feature | SAP-supplied licence | Note |
+|---|---|---|
+| **Parallel query / parallel DML** | Included — base EE | **740897** **[V]** |
+| **Database links** | Included — base EE | **740897** (absent from the options table) **[V]** |
+| **Partitioning** | ✅ Included | **740897** **[V]** |
+| **Advanced Compression** | ✅ Included | **740897** **[V]** |
+| **RAC / Database Vault** | ⚠️ **Extra** — "Oracle Extended License Package" | **740897** **[V]** |
+| **In-Memory** | ⚠️ **Extra** above 16 GB (free ≤16 GB from 19.8) | **740897** **[V]** |
+| **Multitenant** | ⚠️ **Extra**, except **≤3 PDBs from 19c** | **740897** **[V]** |
+
+> ⚠️ **If the customer bought Oracle direct from Oracle rather than through SAP, none of the above
+> applies** — their own Oracle agreement governs, and they must check it with Oracle. Note 740897 is
+> explicit that the SAP package *"always includes all of the options that are required for the SAP
+> environment"*, which is a statement about the **SAP-resold** licence only. **[V]**
+
+### HANA — contractual, not documented in a Note
+
+Searching the Note database for a HANA licence restriction on **Smart Data Access** returns nothing,
+and that is the answer: **HANA licensing is defined in the customer's contract**, not in SAP Notes.
+**[V — verified by absence]**
+
+What that means practically:
+
+- **HANA runtime / "runtime edition for applications"** licences restrict the database to running
+  **the licensed SAP application**. Using the same HANA as a general-purpose data platform is what
+  the full-use / Enterprise licence is for.
+- **Creating a remote source to another SAP system's HANA to refresh an SAP client is application
+  administration** — the same reading as Oracle's "system administration" carve-out — but SAP has
+  not written that down for you in a Note.
+- **Federating non-SAP sources, or leaving the remote source in place for ongoing reporting, is a
+  different activity** and much more likely to need full-use terms.
+
+**Where to actually check:** the **Service Description Guide** for your HANA entitlement and the
+**Order Form** — the governing version is the one your order form references, not the latest
+published. That is exactly what **`sap-compliance-docs`** is for.
+
+> ## 🛑 The practical rule
+>
+> **Create the remote source / database link for the refresh, and drop it when the refresh is done.**
+> A transient, administrator-driven, single-purpose connection is defensible under both licences. A
+> **persistent** remote source that outlives the task starts to look like federation — which is a
+> licensable capability, and a finding in an audit. §5's cleanup step is not just hygiene; it is part
+> of staying inside the licence.
+>
+> **This skill is not legal advice.** Where money or an audit is on the line, confirm with your SAP
+> account team and get the answer in writing.
 
 ---
 
@@ -259,6 +380,7 @@ If the copy's work process for that table is still holding it:
 - **`sap-backup-recovery`** — take a restore point before a bypass; `NOLOGGING` breaks recoverability of the loaded segments.
 - **`sap-db-command-reference`** — `hdbsql`, `sqlplus`, and the correct OS user per database.
 - **`sap-space-reclaim`** — a large delete leaves space that needs reclaiming, and log/undo growth during the load.
+- **`sap-compliance-docs`** — the Service Description Guide that actually governs your HANA entitlement; §0a explains why the licence answer lives there and not in an SAP Note.
 
 ---
 
@@ -453,6 +575,9 @@ assuming this file is current.
 | **[CC6]** | **SAP Note 2555451** / **2761821** — client-copy performance on HANA; **2000000** — HANA performance optimization | **[G]** |
 | **[CC7]** | **SAP Note 1888485** (Oracle 12.1), **2470718** (12.2/18c/19c), **1431798** (11.2) — DB parameters; **838725** — statistics; **1171650** — parameter check | **[G]** |
 | **[CC8]** | **SAP Note 105047** — *Support for Oracle functions in the SAP environment* | **[V]** — distributed transactions and Oracle Gateway are "permitted, no SAP support"; database links between SAP databases are not addressed explicitly |
+| **[CC11]** | **SAP Note 581312** — *Oracle database: Licensing restrictions*, BC-DB-ORA | **[V]** — quotes SAP Price List §C.11.1: direct DB access is for "system administration and monitoring" only; "ABAP using database links" is a permitted interface; automated system-copy tooling via direct access is not; one-time migration is permitted |
+| **[CC12]** | **SAP Note 740897** — *Info about the scope of the Oracle license; required Oracle options*, v37 | **[V]** — the full option table for the SAP-resold Oracle licence. Database links and parallel DML are absent because they are base Enterprise Edition; RAC/Database Vault/In-Memory/Multitenant are the chargeable extras |
+| **[CC13]** | **HANA licensing** — no SAP Note governs Smart Data Access usage rights | **[V — by absence]** — HANA entitlement is contractual; check the **Service Description Guide** referenced by your Order Form. See `sap-compliance-docs` |
 | **[CC9]** | **SAP Note 365304** (deletion reports), **70643** (SCC5 client deletion), **3019660** (`NATIVECOPY` is local-only), **2550545**, **3281364**/**3652777** (client-copy TCIs), **2201677** (tp/R3trans currency) | **[G]** |
 | **[CC10]** | **Field record** — S/4HANA QA refresh, Sep 2026: ACDOCA 105,062,507 rows. Remote SDA 6-way ≈1.59 M rows/min (~70 min); local column-list ≈6 min; native DELETE 72 M rows in ~45 s; 19 h lost to a dead RFC server group | **[F]** |
 

@@ -16,6 +16,12 @@ Two shapes, and they differ more than you would expect:
 
 ### A1. Create the remote source on the TARGET tenant
 
+> ## 🛑 Licence gate applies here
+>
+> `CREATE REMOTE SOURCE` is the cross-database step. **Do not run it until the user has explicitly
+> confirmed licence eligibility** — see the parent skill **§0a**. Asking afterwards is not a gate.
+
+
 ```sql
 CREATE REMOTE SOURCE <SRC_NAME> ADAPTER "hanaodbc"
   CONFIGURATION 'ServerNode=<source_host>:<source_tenant_sql_port>'

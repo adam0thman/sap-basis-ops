@@ -195,6 +195,13 @@ change in §5 step 6, which must be applied to **every** application server's pr
 
 ---
 
+## Cross-references
+
+- **`sap-client-copy-accelerator`** — the reverse operation: filling a client fast rather than removing one.
+- **`sap-space-reclaim`** — what deleting a client actually frees, and why the segment does not shrink on its own.
+- **`sap-transport-mgmt`** — client-dependent customizing and the logical-system rename that follows a deletion.
+- **`sap-backup-recovery`** — take a restore point before deleting any client.
+
 ## Execution discipline (non-negotiable)
 
 ### The holy rule — nothing runs unbacked

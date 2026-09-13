@@ -284,6 +284,13 @@ to produce audit evidence for a landscape is usually the same person who adminis
 
 ---
 
+## Cross-references
+
+- **`sap-software-download`** — entitlement-gated downloads in SAP for Me; the same S-user and portal.
+- **`sap-client-copy-accelerator`** — §0a: why a HANA Smart Data Access licence answer lives in the SDG, not in an SAP Note.
+- **`sap-oracle-dataguard`** — Oracle option licensing (Notes 740897 / 581312) for the database layer.
+- **`sap-sscr-keys`** — the other SAP for Me entitlement workflow.
+
 ## Execution discipline (non-negotiable)
 
 ### The holy rule — nothing runs unbacked

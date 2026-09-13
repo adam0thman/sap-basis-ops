@@ -134,6 +134,13 @@ system is genuinely quiesced. Rebuild afterwards. **[V]**
 
 ### D1. Create the link
 
+> ## 🛑 Licence gate applies here
+>
+> `CREATE DATABASE LINK` is the cross-database step. **Do not run it until the user has explicitly
+> confirmed licence eligibility** — see the parent skill **§0a**, and Note 581312 on why direct DB
+> access is bounded to *system administration*.
+
+
 ```sql
 CREATE DATABASE LINK <LINK_NAME>
   CONNECT TO <SOURCE_SCHEMA_OWNER> IDENTIFIED BY "<pw>"
@@ -145,12 +152,28 @@ SELECT COUNT(*) FROM <TABLE>@<LINK_NAME> WHERE ROWNUM <= 1;   -- smoke test
 Same ownership logic as the HANA variant: **connect as the schema owner**, not a privileged account
 with no rights on the application schema.
 
-> **SAP's support position is narrower than Oracle's capability.** Note **105047** lists
-> *"Distributed Transactions: Use permitted, but no SAP support is provided"* and *"Oracle Gateway:
-> Can be used, but no SAP support"* **[V]**. It does not address plain database links between two
-> SAP Oracle databases explicitly. Treat a link as **permitted-but-unsupported territory**: fine for
-> a one-off refresh operation on a non-production target, and worth confirming with SAP if you intend
-> to make it routine. **[A]**
+> ## Licence and support: two different questions, both answered
+>
+> **Licence — Note 581312** quotes SAP Price List §C.11.1 and is unusually specific **[V]**:
+> - Direct DB access is permitted for *"tools from the areas of **system administration and
+>   monitoring**"* — which is what a DBA refreshing a system is doing.
+> - **`ABAP using database links` is named as a permitted interface.**
+> - **Not** permitted: *"external tools to create automatic SAP system copies"* performing
+>   *"querying/changing/creating data in the database"*. **Automating this into a product is the
+>   prohibited pattern; running it by hand as an administrator is not.**
+> - *"The use of external software for database migration is permitted… as long as this is a
+>   **one-time process that will not be repeated**."*
+>
+> **No extra option licence.** Note **740897**'s option table (Partitioning, Advanced Compression,
+> RAC, Data Guard, In-Memory, Multitenant…) **does not list database links or parallel DML** —
+> they are base Enterprise Edition, which SAP requires anyway. **[V]**
+>
+> **Support — Note 105047**: *"Distributed Transactions: Use permitted, but no SAP support"*;
+> *"Oracle Gateway: Can be used, but no SAP support"* **[V]**. So if the link itself misbehaves,
+> that is an Oracle conversation, not an SAP one.
+>
+> ⚠️ **If the customer licensed Oracle directly from Oracle rather than through SAP, none of the
+> above governs** — their own Oracle agreement does. **[V, 740897]**
 
 ### D2. Load in parallel, partitioned
 
