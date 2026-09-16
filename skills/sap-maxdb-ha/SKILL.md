@@ -1,15 +1,13 @@
 ---
 name: sap-maxdb-ha
 description: >-
-  SAP MaxDB, liveCache and Content Server high availability and disaster recovery — the four distinct
-  mechanisms MaxDB offers and when each is right: cluster for failover (MSCS, UNIX cluster agents,
-  LifeKeeper), shadow/standby database via log recovery, Hot Standby with a storage-vendor HSS
-  library, and snapshot/split-mirror. Covers why SAP recommends a shadow database over Hot Standby
-  for disaster recovery, the read-only Hot Standby constraint, hss_enable, the single-database limit
-  in Microsoft Cluster, automated log recovery from 7.9.10.06, and the log-area mirroring rules. Use
-  for "MaxDB high availability", "liveCache hot standby", "standby database MaxDB", "shadow
-  database", "libHSS", "hss_enable", "MaxDB cluster", "MSCS liveCache", "APO liveCache HA".
-  Cited to SAP Note 952783.
+  SAP MaxDB, liveCache and Content Server HA/DR — the four mechanisms and when each is right:
+  cluster failover (MSCS, UNIX agents, LifeKeeper), shadow/standby via log recovery, Hot Standby
+  with a storage-vendor HSS library, and snapshot/split-mirror. Covers why SAP recommends a
+  shadow database over Hot Standby for DR, the read-only Hot Standby constraint, hss_enable, the
+  single-database limit in MSCS, and log-area mirroring rules. Use for "MaxDB high
+  availability", "liveCache hot standby", "standby database MaxDB", "shadow database", "libHSS",
+  "hss_enable", "MaxDB cluster", "APO liveCache HA".
 ---
 
 # SAP MaxDB / liveCache — high availability

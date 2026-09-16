@@ -1,13 +1,12 @@
 ---
 name: sap-log-reference
 description: >-
-  Find and read the right log/trace for any SAP component or database. Maps where each layer writes —
-  SAP instance/work-directory traces (dev_disp, dev_w*, dev_ms, dev_rd, dev_icm), ABAP logs (SM21, ST22,
-  SM50, SLG1), standalone components (Web Dispatcher, SAProuter, Cloud Connector, Host Agent, IGS), and
-  each database's own logs (HANA trace dir, Oracle alert log, Db2 db2diag, ASE errorlog, MaxDB KnlMsg,
-  SQL Server ERRORLOG) — and how to read them from the OS shell or remotely via SAPControl. Use for
-  "where is the log for X", "read the trace", "hunt down why <symptom>", "which log shows <error>". Cited
-  to help.sap.com.
+  Find and read the right log or trace for any SAP component or database — instance
+  work-directory traces (dev_disp, dev_w*, dev_ms, dev_rd, dev_icm), ABAP logs (SM21, ST22,
+  SM50, SLG1), standalone components (Web Dispatcher, SAProuter, Cloud Connector, Host Agent,
+  IGS) and each database's own logs (HANA trace dir, Oracle alert log, db2diag, ASE errorlog,
+  MaxDB KnlMsg, SQL Server ERRORLOG) — from the OS shell or remotely via SAPControl. Use for
+  "where is the log for X", "read the trace", "which log shows <error>".
 ---
 
 # SAP Log & Trace Reference (hunting + reading)

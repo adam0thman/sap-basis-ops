@@ -1,17 +1,15 @@
 ---
 name: sap-software-download
 description: >-
-  Find, qualify and download SAP software from the SAP for Me Software Center — Support Packages, kernel
-  and patches, installation media, add-ons — and build a correct SP import queue. Resolves a component
-  (e.g. "ST-PI 740") to exact filenames, object keys, file sizes, SHA-256 checksums, the required
-  SPAM/SAINT level and the EPS .PAT name, using the Software Center's own OData service. Then covers
-  where the files go and how to verify them on Linux, Windows and AIX. Downloads are fully scriptable with
-  X.509 client-certificate auth (the SAML chain is documented hop by hop); browser-session auth needs a
-  human. Use for "download a support package", "which SP is latest", "get the kernel SAR", "SP queue from
-  SP28 to latest", "software center", "automate SAP downloads", "SAPCAR extract", "EPS/in". For add-ons
-  (ST-A/PI, ST-PI) it walks the INSTALLATION vs EXCHANGE-UPGRADE tree so you fetch the right delivery type
-  — or both. Use also for "SAINT installation package", "exchange upgrade package", "add-on download".
-  Cited to the live service and SAP Notes.
+  Find, qualify and download SAP software from the SAP for Me Software Center — Support
+  Packages, kernel and patches, installation media, add-ons — and build a correct SP import
+  queue. Resolves a component (e.g. "ST-PI 740") to exact filenames, object keys, sizes, SHA-256
+  checksums, the required SPAM/SAINT level and the EPS .PAT name via the Software Center's OData
+  service, then covers where files go and how to verify them. Downloads are scriptable with
+  X.509 client-certificate auth. For add-ons it walks the INSTALLATION vs EXCHANGE-UPGRADE tree.
+  Use for "download a support package", "which SP is latest", "get the kernel SAR", "SP queue
+  from SP28 to latest", "software center", "automate SAP downloads", "SAPCAR extract", "EPS/in",
+  "SAINT installation package".
 ---
 
 # SAP Software Download (SAP for Me Software Center)

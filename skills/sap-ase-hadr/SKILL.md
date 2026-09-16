@@ -1,16 +1,11 @@
 ---
 name: sap-ase-hadr
 description: >-
-  SAP ASE (Sybase) high availability and disaster recovery — the HADR / Always-On option built on SAP
-  Replication Server. Covers the RMA command surface (sap_status, sap_failover, sap_materialize,
-  sap_set, sap_teardown), setuphadr installation, the Fault Manager and automatic failover, member
-  modes and internal states, the split-brain check and when `force` is legitimate, synchronous vs
-  asynchronous replication and zero data loss, the DR-node three-node topology, SSL, and the long
-  list of ASE features HADR does not support. Version-gated: single-companion only before
-  16.0 SP03 PL03, three-node from PL03. Use for "ASE HADR", "Sybase high availability", "Always-On",
-  "ASE failover", "companion server", "Replication Server for HA", "split-brain ASE", "setuphadr",
-  "sap_status path". NOT the same technology as HANA System Replication. Cited to the SAP ASE HADR
-  Users Guide.
+  SAP ASE (Sybase) HADR / Always-On built on SAP Replication Server — the RMA command surface
+  (sap_status, sap_failover, sap_materialize), setuphadr, the Fault Manager, split-brain and
+  when `force` is legitimate, sync vs async, the three-node DR topology. Use for "ASE HADR",
+  "Sybase high availability", "Always-On", "ASE failover", "companion server", "split-brain
+  ASE", "setuphadr". NOT HANA System Replication.
 ---
 
 # SAP ASE HADR (Always-On)

@@ -1,11 +1,11 @@
 ---
 name: sap-backup-recovery
 description: >-
-  Back up and (critically) recover the database under a SAP system — backup types (full/incremental/log),
-  recovery types (most-recent / point-in-time / specific backup), log/recovery-mode prerequisites, and the
-  per-DB restore commands for SAP HANA, Oracle, SAP ASE, IBM Db2, SAP MaxDB and MS SQL Server, on
-  Linux/Windows/AIX. Use for "restore the database", "recover to point in time", "backup strategy", "test
-  restore", "brrecover", "RECOVER DATA", "db2 rollforward", "RESTORE DATABASE". Cited to help.sap.com.
+  Back up and (critically) recover the database under a SAP system — backup and recovery types,
+  log/recovery-mode prerequisites, and the per-DB restore commands for HANA, Oracle, ASE, Db2,
+  MaxDB and SQL Server on Linux/Windows/AIX. Use for "restore the database", "recover to point
+  in time", "backup strategy", "test restore", "brrecover", "RECOVER DATA", "db2 rollforward",
+  "RESTORE DATABASE".
 ---
 
 # SAP Backup & Recovery

@@ -1,12 +1,11 @@
 ---
 name: sap-housekeeping
 description: >-
-  Keep a SAP NetWeaver / S/4HANA system's logs, traces, spool, job logs, ABAP dumps, audit logs and work
-  directory from filling the filesystem — via the SAP standard reorganization jobs (RSBTCDEL2, RSPO1041,
-  RSSNAPDL, RSBDCREO …) and safe OS-level cleanup, on Linux/Windows/AIX. Use for "clean up logs/traces",
-  "/usr/sap is full", "reorg spool/jobs/dumps", "housekeeping jobs", "delete old work-dir files",
-  "audit log cleanup". Hands DB log/trace cleanup to sap-db-command-reference. Cited to SAP Note 16083 +
-  help.sap.com.
+  Keep a SAP system's logs, traces, spool, job logs, ABAP dumps, audit logs and work directory
+  from filling the filesystem — via the standard reorganization jobs (RSBTCDEL2, RSPO1041,
+  RSSNAPDL, RSBDCREO …) and safe OS-level cleanup, on Linux/Windows/AIX. Use for "clean up
+  logs/traces", "/usr/sap is full", "reorg spool/jobs/dumps", "housekeeping jobs", "delete old
+  work-dir files", "audit log cleanup".
 ---
 
 # SAP Housekeeping (logs / traces / spool / jobs / filesystem)

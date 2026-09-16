@@ -1,15 +1,14 @@
 ---
 name: sap-oracle-dataguard
 description: >-
-  Oracle Data Guard under SAP — what SAP actually permits and supports, which is narrower than
-  Oracle's own documentation. Physical standby only (logical standby is forbidden), Data Guard
-  Broker, the three protection modes and the Maximum Protection trap that terminates the primary,
-  Fast-Start Failover (permitted but unsupported by SAP), Fast Sync, Active Data Guard and Far Sync
-  licensing, and the read-only rule that blocks starting an SAP instance on a standby. Covers the
-  DGMGRL command surface (show/validate configuration, switchover, failover, reinstate, convert),
-  BR*Tools interaction, and standby backups. Use for "Oracle Data Guard SAP", "physical standby",
-  "DGMGRL", "switchover", "failover", "standby database", "Maximum Availability", "Fast-Start
-  Failover", "ORA-16724", "is Data Guard supported by SAP". Cited to SAP Note 105047.
+  Oracle Data Guard under SAP — what SAP actually permits, which is narrower than Oracle's own
+  documentation: physical standby only (logical is forbidden), the Broker, the three protection
+  modes and the Maximum Protection trap that terminates the primary, Fast-Start Failover
+  (permitted but unsupported), Active Data Guard and Far Sync licensing, and the read-only rule
+  that blocks starting an SAP instance on a standby. Covers the DGMGRL command surface, BR*Tools
+  interaction and standby backups. Use for "Oracle Data Guard SAP", "physical standby",
+  "DGMGRL", "switchover", "failover", "Maximum Availability", "ORA-16724", "is Data Guard
+  supported by SAP".
 ---
 
 # Oracle Data Guard under SAP

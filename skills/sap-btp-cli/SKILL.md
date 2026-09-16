@@ -1,15 +1,11 @@
 ---
 name: sap-btp-cli
 description: >-
-  SAP BTP command-line administration — the btp CLI (account model, subaccounts, directories,
-  entitlements, users and role collections, environments, service instances) and the Cloud Foundry
-  cf CLI as SAP uses it, including the MultiApps plugin for multitarget applications (deploy,
-  bg-deploy blue-green, rollback-mta, undeploy, mta-ops, download-mta-op-logs) and the Cloud MTA
-  Build Tool (mbt). Covers the btp CLI's ACTION GROUP/OBJECT syntax, login and targeting, --format
-  json for scripting, and where the btp CLI stops and cf CLI starts. Use for "btp CLI", "btp login",
-  "create subaccount", "assign entitlement", "role collection", "cf CLI", "cf push", "deploy MTA",
-  "mtar", "blue-green deploy", "mbt build", "multiapps plugin", "BTP command line". Cited to
-  help.sap.com / the SAP-docs btp-cloud-platform repository.
+  SAP BTP command-line administration — the btp CLI (subaccounts, directories, entitlements,
+  role collections, environments, service instances) and the cf CLI as SAP uses it, including
+  the MultiApps plugin (deploy, bg-deploy, rollback-mta, undeploy) and mbt. Use for "btp CLI",
+  "btp login", "create subaccount", "assign entitlement", "role collection", "cf CLI", "cf
+  push", "deploy MTA", "mtar", "blue-green deploy", "mbt build".
 ---
 
 # SAP BTP command-line administration

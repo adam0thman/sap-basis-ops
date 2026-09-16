@@ -1,15 +1,12 @@
 ---
 name: sap-hana-lifecycle-tools
 description: >-
-  The two SAP HANA command-line tools Basis teams reach for outside SQL — hdblcm (HANA database
-  lifecycle manager) for install, update, add/remove hosts, host roles, internal network and SLD
-  registration, and hdbcons (HANA database server management console) for expert diagnostics when
-  SQL is unavailable. Covers resident vs media hdblcm, --action syntax and batch mode, and for
-  hdbcons the -p/-e/-d connection options, the SPS06 tenant-name behaviour change, runtime dumps,
-  call stacks, memory analysis, savepoints, log release, and the output-directory restriction. Use
-  for "hdblcm", "add host HANA", "update HANA revision command line", "hdbcons", "runtime dump",
-  "HANA hangs SQL not possible", "call stack HANA", "mm ipmm", "log release", "cons.crashdump".
-  Cited to SAP Note 2222218 and help.sap.com.
+  The two HANA command-line tools outside SQL — hdblcm for install, update, add/remove hosts,
+  host roles, internal network and SLD registration (resident vs media, --action, batch mode),
+  and hdbcons for expert diagnostics when SQL is unavailable: runtime dumps, call stacks, memory
+  analysis, savepoints, log release. Use for "hdblcm", "add host HANA", "update HANA revision
+  command line", "hdbcons", "runtime dump", "HANA hangs SQL not possible", "call stack HANA",
+  "mm ipmm", "log release", "cons.crashdump".
 ---
 
 # SAP HANA lifecycle & console tools

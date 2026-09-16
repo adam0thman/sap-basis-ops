@@ -1,12 +1,11 @@
 ---
 name: sap-system-lifecycle
 description: >-
-  Start, stop and restart a SAP NetWeaver / S/4HANA system in the correct order — database and the
-  instance layer (ERS, ASCS/SCS, PAS, AAS, Web Dispatcher) — using SAPControl (and SAP MMC on Windows)
-  on Linux, Windows and AIX. Use whenever the task is "start/stop/restart the SAP system", "bounce
-  <SID>", "start the app servers", "shut down for maintenance", or ordering the DB relative to the SAP
-  instances. Hands the database start/stop off to sap-db-command-reference. Every command cited to
-  help.sap.com / SAP Notes.
+  Start, stop and restart a NetWeaver / S/4HANA system in the correct order — database and the
+  instance layer (ERS, ASCS/SCS, PAS, AAS, Web Dispatcher) — using SAPControl and SAP MMC on
+  Windows, on Linux/Windows/AIX. Use for "start/stop/restart the SAP system", "bounce <SID>",
+  "start the app servers", "shut down for maintenance", or ordering the DB relative to the SAP
+  instances. Hands DB start/stop to sap-db-command-reference.
 ---
 
 # SAP System Lifecycle (start / stop / restart)

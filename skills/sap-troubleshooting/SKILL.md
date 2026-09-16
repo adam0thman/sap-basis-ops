@@ -1,12 +1,12 @@
 ---
 name: sap-troubleshooting
 description: >-
-  Method and rules of thumb for troubleshooting any SAP issue — establish the facts, enumerate EVERY
-  relevant log/trace source (SM21, ST22, SLG1, ST01/STAUTHTRACE, ST05, SAL/RSAU_READ_LOG, SM58/SMQ1,
-  /IWFND/ERROR_LOG, Java defaultTrace, kernel dev_* traces, DB logs, OS logs), correlate by timestamp,
-  ask what changed, and escalate to SAP with the right evidence. Use whenever something is broken,
-  slow, failing intermittently, or "worked yesterday" — before reaching for a restart. Pairs with
-  sap-log-reference (where each log lives) and sap-health-triage (is it up).
+  Method and rules of thumb for troubleshooting any SAP issue — establish the facts, enumerate
+  EVERY relevant log/trace source (SM21, ST22, SLG1, ST01/STAUTHTRACE, ST05, RSAU_READ_LOG,
+  SM58/SMQ1, /IWFND/ERROR_LOG, Java defaultTrace, kernel dev_* traces, DB and OS logs),
+  correlate by timestamp, ask what changed, and escalate to SAP with the right evidence. Use
+  whenever something is broken, slow, failing intermittently, or "worked yesterday" — before
+  reaching for a restart. Pairs with sap-log-reference and sap-health-triage.
 ---
 
 # SAP Troubleshooting — method & rules of thumb

@@ -1,11 +1,10 @@
 ---
 name: sap-cloud-connector
 description: >-
-  Operate the SAP Cloud Connector (SCC) — the secure on-premise agent that links SAP BTP to on-prem
-  systems — start, stop, restart, the admin UI (port 8443), Master/Shadow high availability, ports and
-  auto-restart, on Linux, Windows and macOS (not AIX). Use for "start/stop/restart cloud connector", "scc
-  is down", "cloud connector admin UI 8443", "SCC high availability master shadow". Logs (ljs_trace.log)
-  in sap-log-reference. Cited to help.sap.com / SAP KBAs.
+  Operate the SAP Cloud Connector (SCC), the on-premise agent linking SAP BTP to on-prem systems
+  — start, stop, restart, the admin UI on 8443, Master/Shadow HA, ports and auto-restart, on
+  Linux/Windows/macOS (not AIX). Use for "start/stop/restart cloud connector", "scc is down",
+  "cloud connector admin UI 8443", "SCC high availability master shadow".
 ---
 
 # SAP Cloud Connector (SCC)

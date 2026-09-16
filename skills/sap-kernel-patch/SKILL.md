@@ -1,19 +1,14 @@
 ---
 name: sap-kernel-patch
 description: >-
-  Patch the SAP kernel (the executables — disp+work, sapstartsrv, …) and update the SAP Host Agent, on
-  Linux, Windows and AIX. Covers assessing versions (disp+work -version, saphostexec -version), the manual
-  kernel swap (stop → back up exe → SAPCAR extract SAPEXE/SAPEXEDB → saproot.sh → start → verify), the Host
-  Agent self-upgrade (saphostexec -upgrade -archive), SAPCAR usage, and rollback. Explains which
-  archives you actually need — SAPEXE/SAPEXEDB exist only for SP Stack Kernels, everything between is a
-  cumulative hotfix (DW.SAR, LIB_DBSL.SAR, SAPWEBGUI.SAR, TP.SAR) — and covers Rolling Kernel Switch
-  (RKS) for patching without downtime: the separate-ASCS prerequisite, RKS compatibility and StoC.xml,
-  why a cluster switch is mandatory for the ASCS under HA, and the lack of Java/dual-stack support. Use
-  for "patch the kernel", "kernel upgrade", "update disp+work", "update the host agent", "SAPCAR
-  extract", "rolling kernel switch", "RKS", "kernel without downtime", "SP Stack Kernel", "SAPEXE
-  missing for this patch level", "which DW.SAR do I need". Points to SUM/SPAM for larger updates and to
-  sap-software-download for obtaining the files. Cited to SAP Notes 953653, 3628821, 19466 and
-  help.sap.com.
+  Patch the SAP kernel and update the SAP Host Agent on Linux/Windows/AIX — version assessment,
+  the manual swap (stop → back up exe → SAPCAR extract SAPEXE/SAPEXEDB → saproot.sh → start →
+  verify), Host Agent self-upgrade, rollback, and which archives you actually need:
+  SAPEXE/SAPEXEDB exist only for SP Stack Kernels, everything between is a cumulative hotfix
+  (DW.SAR, LIB_DBSL.SAR, TP.SAR). Covers Rolling Kernel Switch — the separate-ASCS prerequisite,
+  StoC.xml, the mandatory cluster switch, no Java/dual-stack. Use for "patch the kernel",
+  "kernel upgrade", "update disp+work", "update the host agent", "rolling kernel switch", "RKS",
+  "SP Stack Kernel", "which DW.SAR do I need".
 ---
 
 # SAP Kernel Patch & Host Agent Update

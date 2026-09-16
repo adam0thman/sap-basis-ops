@@ -1,13 +1,12 @@
 ---
 name: sap-dormant-clients
 description: >-
-  Assess whether a client is genuinely dormant and retire it safely — the install leftovers 000/001/066
-  and any abandoned project/sandbox client. Builds evidence from last logon (RSUSR200/SUIM), workload
-  statistics (ST03N settlement statistics), scheduled jobs (TBTCO/TBTCP), update records, change documents
-  and client-specific table volumes; classifies the client; then deletes with SCC5 (test run first) and
-  handles what SCC5 leaves behind — TemSe objects, spool, T000, SAP* access. Use for "can we delete client
-  001", "is client 066 still needed", "dormant client", "unused client", "SCC5", "client cleanup",
-  "reclaim space from an old client". Cited to SAP Notes.
+  Assess whether a client is genuinely dormant and retire it safely — 000/001/066 and abandoned
+  project/sandbox clients. Builds evidence from last logon (RSUSR200/SUIM), ST03N workload
+  statistics, jobs (TBTCO/TBTCP), change documents and client-specific table volumes, then
+  deletes with SCC5 (test run first) and handles what it leaves behind — TemSe, spool, T000,
+  SAP*. Use for "can we delete client 001", "is client 066 still needed", "dormant client",
+  "unused client", "SCC5", "client cleanup".
 ---
 
 # Dormant Client Assessment & Retirement

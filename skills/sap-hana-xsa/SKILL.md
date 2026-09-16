@@ -1,15 +1,13 @@
 ---
 name: sap-hana-xsa
 description: >-
-  SAP HANA XS Advanced (XSA) operations from the command line — the two CLIs and why both exist:
-  `xs` for normal work (local or remote, Cloud-Foundry-like syntax) and `XSA` for local maintenance
-  when remote access is gone, including XSA diagnose, collect-traces, restart, du and list-tenants.
-  Covers the org/space model, routing mode (which cannot be changed after installation), the
-  app-working directory and its sizing, global_allocation_limit because XSA is outside HANA memory
-  management, certificate expiry, tenant-database registration and the backup rule that they must be
-  recovered together, and XSA under HANA System Replication. Use for "xs CLI", "XSA", "xs login",
-  "xs apps", "XSA diagnose", "xscontroller not starting", "XSA restart", "xs command not found",
-  "XS advanced", "HANA app runtime", "routing mode", "app_working". NOT the BTP `cf` CLI.
+  SAP HANA XS Advanced operations — `xs` for normal work and `XSA` for local maintenance when
+  remote access is gone (diagnose, collect-traces, restart, du, list-tenants). Covers the
+  org/space model, routing mode (unchangeable after installation), the app-working directory and
+  its sizing, global_allocation_limit, certificate expiry, tenant-database registration and the
+  joint-recovery backup rule, and XSA under HANA System Replication. Use for "xs CLI", "XSA",
+  "xs login", "xs apps", "XSA diagnose", "xscontroller not starting", "xs command not found",
+  "routing mode", "app_working". NOT the BTP `cf` CLI.
 ---
 
 # SAP HANA XS Advanced (XSA)

@@ -1,16 +1,15 @@
 ---
 name: sap-space-reclaim
 description: >-
-  Landscape space-reclamation assessment — find what can be deleted, what has a configurable retention,
-  what is self-service vs change-controlled, and how much disk you actually get back. Covers ABAP technical
-  tables (spool/TemSe, table logging, application log, job logs, dumps, IDoc/RFC queues, workload stats,
-  change documents), the Security Audit Log archive/delete path, per-database diagnostic files and crash
-  dumps for all six platforms (HANA crashdump/rtedump, Oracle ADR cdump, Db2 FODC, ASE, MaxDB, SQL Server
-  SQLDump), and OS-layer leftovers (work-directory traces, core dumps, old kernels, SUM directories,
-  leftover installation media). Sizes each candidate before and after, and is honest that deleting rows
-  does not shrink a database without reorganization. Use for "database is full", "reclaim disk", "what can
-  we clean up", "retention settings", "how much space will we save", "core dumps", "crash dumps", "trace
-  files", "db2diag", "adrci", "SQLDump", "DBTABLOG huge", "TST03 huge". Cited to SAP Notes.
+  Landscape space-reclamation assessment — what can be deleted, what has a configurable
+  retention, what is self-service vs change-controlled, and how much disk you actually get back.
+  Covers ABAP technical tables (spool/TemSe, table logging, application log, job logs, dumps,
+  IDoc/RFC queues, workload stats, change documents), the Security Audit Log archive/delete
+  path, per-database diagnostic files and crash dumps across all six platforms, and OS-layer
+  leftovers (work-directory traces, core dumps, old kernels, SUM directories, installation
+  media). Honest that deleting rows does not shrink a database without reorganization. Use for
+  "database is full", "reclaim disk", "what can we clean up", "retention settings", "core
+  dumps", "db2diag", "adrci", "DBTABLOG huge", "TST03 huge".
 ---
 
 # Space Reclamation Assessment

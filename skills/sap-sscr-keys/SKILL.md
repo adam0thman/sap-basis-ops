@@ -1,13 +1,13 @@
 ---
 name: sap-sscr-keys
 description: >-
-  SAP Software Change Registration (SSCR) — developer keys and object keys. Decide whether the system
-  even needs them (S/4HANA, BW/4HANA and AS ABAP 7.51+ do not; NetWeaver 7.50 and below do), gather the
-  exact parameters a key is bound to, request them in SAP for Me (UI or its OData service), handle the
-  14-day post-upgrade SPAU grace window, and reassign/restore/upload keys with RS_SSCR_KEY_UPLOAD. Covers
-  tables DEVACCESS and ADIRACCESS and why you must never edit them by hand. Use for "developer key",
-  "object key", "access key", "SSCR", "key required to modify SAP object", "register developer", "SPAU
-  asking for object keys". Cited to SAP Notes and the live SSCR service.
+  SAP Software Change Registration (SSCR) — developer keys and object keys. Decide whether the
+  system even needs them (S/4HANA, BW/4HANA and AS ABAP 7.51+ do not; NetWeaver 7.50 and below
+  do), gather the parameters a key binds to, request them in SAP for Me, handle the 14-day
+  post-upgrade SPAU grace window, and reassign/restore keys with RS_SSCR_KEY_UPLOAD. Covers
+  DEVACCESS and ADIRACCESS and why you must never edit them by hand. Use for "developer key",
+  "object key", "access key", "SSCR", "key required to modify SAP object", "register developer",
+  "SPAU asking for object keys".
 ---
 
 # SSCR — Developer Keys & Object Keys

@@ -1,16 +1,14 @@
 ---
 name: sap-sqlserver-alwayson
 description: >-
-  SQL Server Always On Availability Groups under SAP NetWeaver — the listener-based connection
-  configuration (SAPDBHOST, dbs/mss/server, MSSQL_SERVER, MultiSubnetFailover, the case-sensitive
-  JDBC parameter), why logins must be created by SWPM "Configure additional Always On Node" and never
-  manually, the readable-secondary rules including the unsupported "Yes" setting, synchronous vs
-  asynchronous replication and the 60-mile latency guidance, WSFC without shared disks, and the
-  per-node failover verification that prevents a failover emergency turning into production downtime.
-  Also covers Database Mirroring as the pre-2012 predecessor. Use for "SQL Server AlwaysOn SAP",
-  "availability group", "listener", "MultiSubnetFailover", "MSSQL_CONNOPTS", "readable secondary",
-  "SAP cannot connect after failover", "Configure additional Always On Node", "error 976".
-  Cited to SAP Note 1772688.
+  SQL Server Always On Availability Groups under SAP NetWeaver — listener-based connection
+  configuration (SAPDBHOST, dbs/mss/server, MSSQL_SERVER, MultiSubnetFailover and the
+  case-sensitive JDBC parameter), why logins must be created by SWPM "Configure additional
+  Always On Node" and never manually, the readable-secondary rules including the unsupported
+  "Yes" setting, sync vs async and the latency guidance, WSFC without shared disks, and per-node
+  failover verification. Also covers Database Mirroring. Use for "SQL Server AlwaysOn SAP",
+  "availability group", "listener", "MultiSubnetFailover", "readable secondary", "SAP cannot
+  connect after failover", "error 976".
 ---
 
 # SQL Server Always On under SAP NetWeaver

@@ -1,10 +1,10 @@
 ---
 name: sap-web-dispatcher
 description: >-
-  Operate the SAP Web Dispatcher (the reverse proxy / load balancer in front of SAP HTTP(S) traffic) —
-  start, stop, status, ports, profile essentials and the admin UI — on Linux, Windows and AIX. Use for
-  "start/stop/restart the web dispatcher", "webdisp is down", "web dispatcher ports/profile", "wdisp/system
-  backend", "/sap/wdisp/admin". Logs are in sap-log-reference. Cited to help.sap.com.
+  Operate the SAP Web Dispatcher, the reverse proxy / load balancer in front of SAP HTTP(S)
+  traffic — start, stop, status, ports, profile essentials and the admin UI, on
+  Linux/Windows/AIX. Use for "start/stop/restart the web dispatcher", "webdisp is down", "web
+  dispatcher ports/profile", "wdisp/system backend", "/sap/wdisp/admin".
 ---
 
 # SAP Web Dispatcher

@@ -1,12 +1,11 @@
 ---
 name: sap-db-command-reference
 description: >-
-  Database-specific operational commands for SAP systems — start, stop, connect, status and
-  basic backup for the SAP-supported databases (SAP HANA, Oracle, SAP ASE/Sybase, IBM Db2,
-  SAP MaxDB/liveCache, Microsoft SQL Server), with Linux / Windows / AIX variants. Use whenever
-  a Basis/operations task needs the DB layer: "stop the database", "connect to HANA/ASE/Oracle",
-  "is the DB up", "restart the database before/after the SAP instances", or when sap-system-lifecycle
-  hands off DB start/stop. Every command is cited to help.sap.com / the official Administration Guide.
+  Start, stop, connect, status and basic backup commands for the SAP-supported databases (HANA,
+  Oracle, ASE/Sybase, Db2, MaxDB/liveCache, SQL Server), with Linux / Windows / AIX variants.
+  Use whenever a task needs the DB layer: "stop the database", "connect to HANA/ASE/Oracle", "is
+  the DB up", "restart the database before/after the SAP instances", or when
+  sap-system-lifecycle hands off DB start/stop.
 ---
 
 # SAP DB Command Reference

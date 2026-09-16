@@ -1,19 +1,15 @@
 ---
 name: sap-compliance-docs
 description: >-
-  Map an SAP landscape or subscription to the governance, certification and usage-rights documents that
-  actually apply to it. Covers the SAP Trust Center Compliance Finder and its four filter dimensions
-  (Compliance Offering / Compliance Entity / Assessment Period / Region-Country), the global certification
-  catalogue (ISO 27001, 27017, 27018, 27701, 42001, 9001, 14001, 50001, 22301, BS 10012, SOC 1/SOC 2 and
-  bridge letters, C5, PCI DSS, CSA STAR, TISAX, GxP, EU Cloud CoC), regional schemes (FedRAMP, CMMC, IRAP,
-  Canadian PBMM, KRITIS/NIS2), AI governance (ISO 42001, EU AI Act, Joule Agents), and ALM usage rights for
-  SAP Cloud ALM, SAP Solution Manager, SAP Focused Run and Tricentis. Use for "which ISO certificate covers
-  my service", "SOC 2 report for", "compliance finder", "trust center", "do we need to license Focused
-  Run", "Solution Manager usage rights", "audit evidence for SAP". Also covers the contract document stack —
-  order form, Cloud Service Description including the Service Description Guide (SDG), DPA, GTC, supplements,
-  SLAs, TOMs and AI terms — and where each is published. Use also for "service description guide", "SDG",
-  "SLA document", "DPA", "TOMs", "what did we actually buy". Locates authoritative documents — it does not
-  give legal or licensing advice.
+  Map an SAP landscape or subscription to the governance, certification and usage-rights
+  documents that apply to it — the Trust Center Compliance Finder, the certification catalogue
+  (ISO 27001/27017/27018/27701/42001, SOC 1/2 and bridge letters, C5, PCI DSS, CSA STAR, TISAX,
+  GxP, FedRAMP, IRAP, NIS2), AI governance, ALM usage rights (Cloud ALM, Solution Manager,
+  Focused Run, Tricentis), and the contract stack (order form, CSD/SDG, DPA, GTC, SLAs, TOMs).
+  Use for "which ISO certificate covers my service", "SOC 2 report for", "compliance finder",
+  "trust center", "do we need to license Focused Run", "service description guide", "SLA
+  document", "DPA", "what did we actually buy". Locates authoritative documents — not legal or
+  licensing advice.
 ---
 
 # SAP Compliance, Certification & Usage-Rights Documents

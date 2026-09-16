@@ -1,13 +1,12 @@
 ---
 name: sap-security-patch
 description: >-
-  Run the monthly SAP Security Patch Day workflow — retrieve the current month's SAP Security Notes from
-  the SAP Support Portal (SAP Security Patch Day, second Tuesday), narrow them to the subset that applies
-  to THIS system (installed software-component versions + kernel), compare against what's already applied
-  (System Recommendations / SAP Focused Run / RSECNOTE), prioritize by CVSS/HotNews, and implement via
-  SNOTE. Use for "check this month's SAP security notes", "which security notes apply to <SID>", "SAP
-  patch day", "HotNews", "compare released notes vs applied". Browses the SAP Security Notes page. Cited
-  to help.sap.com / SAP Support Portal.
+  The monthly SAP Security Patch Day workflow — retrieve the current month's Security Notes from
+  the Support Portal, narrow them to the subset that applies to THIS system (installed component
+  versions + kernel), compare against what is already applied (System Recommendations / Focused
+  Run / RSECNOTE), prioritize by CVSS/HotNews, and implement via SNOTE. Use for "check this
+  month's SAP security notes", "which security notes apply to <SID>", "SAP patch day",
+  "HotNews", "compare released notes vs applied".
 ---
 
 # SAP Security Patch Day

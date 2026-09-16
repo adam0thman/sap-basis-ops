@@ -1,14 +1,12 @@
 ---
 name: sap-crypto-pse
 description: >-
-  SAP cryptography at the command line — sapgenpse and CommonCryptoLib for managing Personal Security
-  Environments (PSEs), the credential files that make SNC and SSL/TLS work. Covers get_pse, gen_pse,
-  import_own_cert, export_own_cert, maintain_pk, seclogin, get_my_name and the certificate-list
-  operations, the PSE/cred_v2 pairing that is the usual root cause of "works as one user, fails as
-  another", SECUDIR, PSE types (SAPSSLS, SAPSSLC, SAPSSLA, SNC), SAProuter certificate renewal, and
+  sapgenpse and CommonCryptoLib — managing the PSEs behind SNC and SSL/TLS: get_pse, gen_pse,
+  import_own_cert, export_own_cert, maintain_pk, seclogin, the PSE/cred_v2 pairing that causes
+  "works as one user, fails as another", SECUDIR, PSE types, SAProuter certificate renewal,
   HSM-backed PSEs. Use for "sapgenpse", "PSE", "SNC certificate", "SSL certificate SAP",
-  "import_own_cert", "seclogin", "cred_v2", "SECUDIR", "renew SAProuter certificate",
-  "CommonCryptoLib", "GSS-API no credentials". Linux/Windows/AIX.
+  "import_own_cert", "seclogin", "cred_v2", "SECUDIR", "renew SAProuter certificate", "GSS-API
+  no credentials". Linux/Windows/AIX.
 ---
 
 # SAP cryptography — `sapgenpse` and PSE management

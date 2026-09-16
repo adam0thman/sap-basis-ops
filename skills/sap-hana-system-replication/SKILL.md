@@ -1,18 +1,15 @@
 ---
 name: sap-hana-system-replication
 description: >-
-  Configure, operate, monitor and take over SAP HANA System Replication (HSR) — the full hdbnsutil
-  command set (sr_enable, sr_register, sr_takeover, sr_unregister, sr_changeReplicationMode,
-  sr_fullsync, sr_state), replication modes (sync/syncmem/async/full sync) and operation modes
-  (delta_datashipping/logreplay/logreplay_readaccess), multitier and multitarget landscapes,
-  Active/Active read-enabled secondaries, takeover with handshake, failback, and the
-  systemReplicationStatus.py / landscapeHostConfiguration.py / getTakeoverRecommendation.py checks.
-  Every feature is version-gated — HANA 1.0 SPS09/11/12 and 2.0 SPS01→SPS08 differ in available
-  syntax, defaults and capability — so the skill establishes the revision BEFORE quoting a command.
-  Covers HA/DR provider hooks and the SAPHanaSR vs SAPHanaSR-angi cluster split. Use for
-  "set up HANA replication", "register secondary", "HSR takeover", "failback", "replication is out
-  of sync", "logreplay vs delta_datashipping", "multitarget replication", "Active/Active read
-  enabled", "SAPHanaSR-angi". Cited to the SAP HANA System Replication Guide and SAP Note 1999880.
+  Configure, operate, monitor and take over HANA System Replication — the full hdbnsutil set
+  (sr_enable, sr_register, sr_takeover, sr_unregister, sr_changeReplicationMode, sr_state),
+  replication and operation modes, multitier and multitarget, Active/Active read-enabled,
+  takeover with handshake, failback, and the systemReplicationStatus / getTakeoverRecommendation
+  checks. Establishes the revision BEFORE quoting a command, since syntax and defaults differ
+  across HANA 1.0 SPS09-12 and 2.0 SPS01-08. Covers HA/DR provider hooks and SAPHanaSR vs
+  SAPHanaSR-angi. Use for "set up HANA replication", "register secondary", "HSR takeover",
+  "failback", "replication is out of sync", "logreplay vs delta_datashipping", "multitarget
+  replication", "Active/Active read enabled".
 ---
 
 # SAP HANA System Replication (HSR)

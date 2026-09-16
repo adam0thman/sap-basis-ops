@@ -1,11 +1,12 @@
 ---
 name: sap-transport-mgmt
 description: >-
-  Move SAP transport requests at the OS layer with tp and R3trans — add to the import buffer, import single
-  requests or import all, check status, and understand the transport directory, unconditional modes, and
-  return codes — on Linux, Windows and AIX. Use for "import a transport at OS level", "tp import", "tp
-  addtobuffer / showbuffer", "R3trans", "transport won't import", "/usr/sap/trans", "unconditional mode".
-  STMS is the preferred front-end; this is the command-line layer beneath it. Cited to help.sap.com.
+  Move SAP transport requests at the OS layer with tp and R3trans — add to the import buffer,
+  import single requests or import all, check status, and understand the transport directory,
+  unconditional modes and return codes, on Linux/Windows/AIX. STMS is the preferred front-end;
+  this is the command-line layer beneath it. Use for "import a transport at OS level", "tp
+  import", "tp addtobuffer / showbuffer", "R3trans", "transport won't import", "/usr/sap/trans",
+  "unconditional mode".
 ---
 
 # SAP Transport Management (tp / R3trans, OS layer)

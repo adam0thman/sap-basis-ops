@@ -1,14 +1,12 @@
 ---
 name: sap-os-executables
 description: >-
-  The SAP executables that cross the boundary between the OS shell and the ABAP system — sapevt to
-  raise background-processing events from outside SAP, sapxpg as the external-program controller
-  behind SM49/SM69/DB13/SXPG_COMMAND_EXECUTE, and sapinst as the installation engine underneath SWPM.
-  Covers sapevt syntax and the pf=/name=/nr= addressing forms, why external commands are a privilege
-  boundary and must start with Y or Z, the S_LOG_COM authorization object, common SAPXPG failures
-  ("Starting external program SAPXPG failed", "Can't exec external program"), and running sapinst
-  unattended with an inifile. `sapevt` doubles as the out-of-band way to trigger work when nobody can log on (it needs no dialog work process), while `sapxpg` explicitly does NOT — it is driven by the ABAP system. Use for "sapevt", "trigger job when SAP GUI is down",, "raise SAP event from script", "sapxpg", "SM49",
-  "SM69", "external command failed", "SXPG_COMMAND_EXECUTE", "sapinst", "SWPM unattended".
+  The SAP executables that cross the OS/ABAP boundary — sapevt to raise background-processing
+  events from outside SAP (it needs no dialog work process, so it triggers work when nobody can
+  log on), sapxpg as the controller behind SM49/SM69/DB13/SXPG_COMMAND_EXECUTE with its Y/Z
+  privilege boundary and S_LOG_COM, and sapinst unattended with an inifile. Use for "sapevt",
+  "raise SAP event from script", "trigger job when SAP GUI is down", "sapxpg", "SM49", "SM69",
+  "external command failed", "SXPG_COMMAND_EXECUTE", "sapinst", "SWPM unattended".
   Linux/Windows/AIX.
 ---
 

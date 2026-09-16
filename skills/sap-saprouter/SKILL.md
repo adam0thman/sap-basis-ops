@@ -1,11 +1,10 @@
 ---
 name: sap-saprouter
 description: >-
-  Operate SAProuter — the SAP application-level proxy that controls and secures network routes (typically
-  to/from SAP support and between networks) — start, stop, status, the saprouttab route-permission table,
-  port 3299, SNC, and niping connection tests, on Linux, Windows and AIX. Use for "start/stop saprouter",
-  "saprouttab", "route to SAP support", "niping test", "saprouter SNC". Traces in sap-log-reference. Cited
-  to help.sap.com.
+  Operate SAProuter, the application-level proxy controlling network routes to/from SAP support
+  — start, stop, status, the saprouttab route-permission table, port 3299, SNC and niping
+  connection tests, on Linux/Windows/AIX. Use for "start/stop saprouter", "saprouttab", "route
+  to SAP support", "niping test", "saprouter SNC".
 ---
 
 # SAProuter

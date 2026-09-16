@@ -1,14 +1,12 @@
 ---
 name: sap-db2-hadr
 description: >-
-  IBM Db2 for LUW High Availability Disaster Recovery (HADR) under SAP — synchronization modes
-  (SYNC/NEARSYNC/ASYNC/SUPERASYNC), multiple standbys and HADR_TARGET_LIST, the VIP-vs-Automatic
-  Client Reroute decision and why SAP recommends VIP, cluster automation with SA MP or Pacemaker,
-  takeover with the Graceful Maintenance Tool, rolling Fix Pack updates and the one-way version rule,
-  Reads on Standby, LOGINDEXBUILD and the non-logged operations that can silently invalidate a
-  standby. Use for "Db2 HADR", "DB6 HADR", "takeover", "standby database Db2", "HADR_SYNCMODE",
-  "NEARSYNC", "peer state", "automatic client reroute", "db2haicu", "SA MP", "sapdb2cluster.sh",
-  "rolling fix pack", "SQL1776N", "HADR error". Cited to SAP Note 1612105.
+  IBM Db2 for LUW HADR under SAP — synchronization modes, multiple standbys and
+  HADR_TARGET_LIST, VIP vs Automatic Client Reroute, cluster automation with SA MP or Pacemaker,
+  takeover and the Graceful Maintenance Tool, rolling Fix Packs, Reads on Standby, and the
+  non-logged operations that silently invalidate a standby. Use for "Db2 HADR", "DB6 HADR",
+  "takeover", "standby database Db2", "HADR_SYNCMODE", "peer state", "automatic client reroute",
+  "db2haicu", "rolling fix pack", "SQL1776N".
 ---
 
 # Db2 for LUW — HADR under SAP

@@ -1,13 +1,14 @@
 ---
 name: sap-health-triage
 description: >-
-  First-response health check and triage for a SAP NetWeaver / S/4HANA system from the OS shell — is it
-  up, is it healthy, and if not, why. Uses SAPControl's read-only diagnostics (GetProcessList, extract
-  the SM21 syslog via ABAPReadSyslog, work processes via ABAPGetWPTable, dev traces via
-  ListDeveloperTraces/ReadDeveloperTrace, CCMS alerts via GetAlertTree), the sappfpar profile/memory
-  validator, and OS-level checks (disp+work, dpmon, filesystem). **Also the out-of-band fallback when the system is jammed**: `sapstartsrv` is a separate OS process, so `sapcontrol` still returns the work-process table (SM50), the cross-instance table (SM66), the dispatcher queues and the syslog (SM21) when SAP GUI will not log on and RFC hangs; `dpmon` reads shared memory when even `sapstartsrv` is unresponsive. Use for "is <SID> up/healthy?", "all work processes occupied", "cannot log on to SAP", "RFC hangs", "system jammed", "PRIV mode", "dispatcher queue full",,
-  "verify the start worked", "why won't it start", "check the syslog / traces / work processes / profile
-  parameters". Linux/Windows/AIX. Cited to help.sap.com / SAP Notes.
+  First-response health check and triage for a NetWeaver / S/4HANA system from the OS shell — is
+  it up, is it healthy, and if not, why. Uses SAPControl read-only diagnostics (GetProcessList,
+  ABAPReadSyslog for SM21, ABAPGetWPTable, dev traces, CCMS alerts), sappfpar, disp+work, dpmon
+  and filesystem checks. Also the out-of-band fallback when the system is jammed: sapstartsrv is
+  a separate process, so sapcontrol still returns SM50/SM66, the dispatcher queues and the
+  syslog when SAP GUI will not log on and RFC hangs. Use for "is <SID> up/healthy?", "all work
+  processes occupied", "cannot log on to SAP", "RFC hangs", "system jammed", "PRIV mode",
+  "dispatcher queue full", "why won't it start", "check the syslog / traces / work processes".
 ---
 
 # SAP Health Triage

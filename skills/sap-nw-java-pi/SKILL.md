@@ -1,19 +1,14 @@
 ---
 name: sap-nw-java-pi
 description: >-
-  SAP NetWeaver AS Java administration and PI/PO (Process Integration / Orchestration) operations —
-  NWA (/nwa) as the central admin UI, the J2EE sapcontrol functions (J2EEGetProcessList2,
-  J2EEGetThreadList2), jcmon and the telnet admin shell on 5<nr>08 as out-of-band channels, the AS
-  Java log/trace set (defaultTrace, std_server*.out, dev_jcontrol), and on the PI side PIMON,
-  Message Monitoring, the EOIO stuck-message decision tree, CPA cache (/CPACache/monitor.jsp) and
-  adapter trace locations. Explains why JCo is the WRONG tool for AS Java (it is RFC-to-ABAP) and what
-  the real programmatic surfaces are: SOAP web services (AdapterMessageMonitoring with basic/SSL/
-  client-cert bindings, CommunicationChannel CRUD), monitor servlets over Basic auth, sapcontrol SOAP,
-  JMX/P4 and the telnet shell — so browser use is needed only for NWA and the Swing clients. Includes the XPI Inspector retirement (Feb 2026). Use for
-  "AS Java", "NWA", "nwa logon", "PIMON", "PI message stuck", "To be delivered", "EOIO HOLD",
-  "CPA cache refresh", "ESR", "Integration Directory", "defaultTrace", "server0", "jcontrol",
-  "AS Java telnet", "adapter trace", "channel monitor". Cited to SAP Note 1514898 and live-verified
-  against a PI 7.50 system.
+  SAP NetWeaver AS Java and PI/PO operations — NWA, the J2EE sapcontrol functions, jcmon and the
+  telnet admin shell on 5<nr>08 as out-of-band channels, the AS Java log set (defaultTrace,
+  std_server*.out, dev_jcontrol), and on PI: PIMON, message monitoring, the EOIO stuck-message
+  decision tree, CPA cache and adapter traces. Explains why JCo is the WRONG tool for AS Java
+  and what the real programmatic surfaces are (SOAP web services, monitor servlets, sapcontrol
+  SOAP, JMX/P4, telnet). Use for "AS Java", "NWA", "PIMON", "PI message stuck", "To be
+  delivered", "EOIO HOLD", "CPA cache refresh", "ESR", "Integration Directory", "defaultTrace",
+  "server0", "adapter trace".
 ---
 
 # SAP NetWeaver AS Java & PI/PO operations

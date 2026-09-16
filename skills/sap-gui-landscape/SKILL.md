@@ -1,18 +1,15 @@
 ---
 name: sap-gui-landscape
 description: >-
-  Central SAP GUI landscape configuration — transaction SLMT (SAP UI Landscape maintenance tool, report
-  RSLSMT) and the SAPUILandscape.xml / SAPUILandscapeGlobal.xml files that SAP Logon, SAP Logon Pad, SAP
-  Business Client and SAP GUI for Java read. Covers maintaining the XML centrally in the database,
-  distributing it by UNC or HTTP/HTTPS, the LandscapeFileOnServer registry keys and their HKCU-vs-HKLM
-  precedence, migration from the old INI files, and the full connection-string grammar (/H/ /S/ /M/ /G/
-  /R/ /P/ router chains) plus every connection parameter including SNC (sncon, sncname, sncqop). Use for
-  Also covers Windows client deployment: SAPSetup (NwSapSetup.exe / NwSapSetupAdmin.exe), package creation
-  and silent install/uninstall flags, return codes, the Automatic Workstation Update Service (AWUS), Local
-  Security Handling, and frontend SNC configuration (SNC_LIB, SNC_LIB_64, SSF_LIBRARY_PATH, mechanism
-  prefixes). Use for "SLMT", "SAPUILandscape.xml", "distribute SAP GUI connections", "connection string",
-  "SAP GUI for Java SNC", "sncqop", "logon group not working", "NwSapSetup", "NwSapSetupAdmin", "silent
-  install SAP GUI", "AWUS", "SNC_LIB", "SNCERR_UNKNOWN_MECH". Cited to SAP Notes and help.sap.com.
+  Central SAP GUI landscape configuration — SLMT (report RSLSMT) and the SAPUILandscape.xml /
+  SAPUILandscapeGlobal.xml files SAP Logon, Business Client and SAP GUI for Java read:
+  maintaining them centrally, distribution by UNC or HTTP(S), the LandscapeFileOnServer registry
+  keys and HKCU-vs-HKLM precedence, and the full connection-string grammar (/H/ /S/ /M/ /G/
+  router chains) including SNC parameters. Also Windows client deployment: SAPSetup /
+  NwSapSetup, silent install, AWUS, frontend SNC (SNC_LIB, SNC_LIB_64). Use for "SLMT",
+  "SAPUILandscape.xml", "distribute SAP GUI connections", "connection string", "SAP GUI for Java
+  SNC", "sncqop", "logon group not working", "NwSapSetup", "silent install SAP GUI",
+  "SNCERR_UNKNOWN_MECH".
 ---
 
 # SAP GUI Landscape & Connection Configuration

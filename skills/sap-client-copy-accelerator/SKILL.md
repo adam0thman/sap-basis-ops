@@ -1,23 +1,14 @@
 ---
 name: sap-client-copy-accelerator
 description: >-
-  Rescue an SAP client copy (SCC9 remote / SCCL local / SCC7) that has stalled or is crawling on ONE
-  huge table — typically ACDOCA, BSEG, FAGLFLEXA, MATDOC or COEP — by bypassing the copy framework
-  for that table and moving the rows database-natively instead: a batched native DELETE of the target
-  client, then a parallel INSERT...SELECT partitioned by a natural key (fiscal year), 6-ish streams.
-  Covers SAP HANA (Smart Data Access remote source + virtual table for cross-system; column-list
-  rewrite for same-tenant local) and Oracle (database link + CTAS/parallel DML, the approach SAP
-  itself documents in Note 857973). Insists on diagnosing FIRST — read the tenant's own trace and
-  prove the bottleneck is the ABAP copy framework, not the database — and on exhausting the supported
-  levers (RSCCEXPT exclusions, RFC server group, parallel processes) before bypassing anything.
-  Gates the cross-database step on explicit user confirmation of licence eligibility — a remote source
-  or database link is never created until the user confirms they are entitled and accept the risk.
-  Use this whenever a client copy is slow, stuck, hanging, aborting or has a multi-day ETA, and
-  specifically for "client copy slow", "client copy taking too long", "SCC9 stuck on ACDOCA",
-  "SCCL stuck", "client copy delete step aborts", "accelerate client copy", "speed up client copy",
-  "client refresh running for days", "SDA table copy", "parallel table load", "copy one table
-  between SAP systems", "client copy ETA 13 hours". Reach for it even when the user only says the
-  refresh will miss its window and has not named a table.
+  Rescue an SAP client copy (SCC9 / SCCL / SCC7) that has stalled or is crawling on ONE huge
+  table — ACDOCA, BSEG, FAGLFLEXA, MATDOC, COEP — by moving the rows database-natively instead:
+  batched DELETE, then parallel INSERT...SELECT partitioned by fiscal year, on HANA (Smart Data
+  Access) or Oracle (database link). Diagnoses FIRST and exhausts the supported levers before
+  bypassing anything; gates cross-database access on explicit licence confirmation. Use for
+  "client copy slow", "client copy stuck", "SCC9 stuck on ACDOCA", "SCCL stuck", "accelerate
+  client copy", "client refresh running for days", "SDA table copy", "client copy ETA 13 hours"
+  — even when the user only says the refresh will miss its window.
 ---
 
 # SAP client-copy accelerator (HANA & Oracle)
