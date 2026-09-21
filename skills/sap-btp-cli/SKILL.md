@@ -193,6 +193,7 @@ is good for interactive use and means automation needs a deliberate approach, no
 - **`sap-software-download`** — where SAP delivers CLI binaries.
 - **`sap-db-command-reference`** — the on-premise counterpart to this file.
 - **`sap-hana-xsa`** — the `xs` CLI for XS Advanced on on-prem HANA. **Looks like `cf`, different platform.**
+- **`sap-support-case`** — raising a BTP case: verify GUIDs from the CLI rather than reusing a stale one, and mind the troubleshooting-key consent gate.
 
 ---
 

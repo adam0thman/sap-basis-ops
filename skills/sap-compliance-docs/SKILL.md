@@ -286,6 +286,7 @@ to produce audit evidence for a landscape is usually the same person who adminis
 - **`sap-client-copy-accelerator`** — §0a: why a HANA Smart Data Access licence answer lives in the SDG, not in an SAP Note.
 - **`sap-oracle-dataguard`** — Oracle option licensing (Notes 740897 / 581312) for the database layer.
 - **`sap-sscr-keys`** — the other SAP for Me entitlement workflow.
+- **`sap-support-case`** — the support entitlement behind what you may raise, and at what priority.
 
 ## Execution discipline (non-negotiable)
 

@@ -144,6 +144,7 @@ sap-basis-ops/
     ├── sap-hana-xsa/             # XS Advanced: xs CLI + XSA local fallback CLI
     ├── sap-nw-java-pi/           # AS Java admin (/nwa) + PI/PO: PIMON, EOIO, CPA cache, adapter traces
     ├── sap-backup-recovery/          # backup + restore/recover per DB, PITR
+    ├── sap-support-case/        # raise an SAP case: earn it, route it, verify the text before submit
     ├── sap-security-patch/           # monthly Security Patch Day workflow
     ├── sap-web-dispatcher/           # HTTP reverse proxy / load balancer
     ├── sap-saprouter/                # NI proxy + saprouttab
@@ -156,7 +157,7 @@ OS-variant snippets live inline in each skill.
 
 ## Status
 
-Phases 1 & 2 complete — 32 skills.
+Phases 1 & 2 complete — 33 skills.
 
 - ✅ `sap-db-command-reference` — **all six databases** complete (HANA, Oracle, SAP ASE, IBM Db2,
   SAP MaxDB/liveCache, MS SQL Server), each cited to help.sap.com with Linux/Windows/AIX handling.

@@ -152,6 +152,7 @@ Software Center.
 - **Restart after config/kernel notes:** [sap-system-lifecycle](../sap-system-lifecycle/SKILL.md).
 - **Post-patch health / new dumps:** [sap-health-triage](../sap-health-triage/SKILL.md).
 - **SAP Notes MCP** (retrieval): see the plugin's SAP Notes MCP notes (content path fix pending).
+- **`sap-support-case`** — when a Note search does not resolve it and a case is genuinely justified; routing, priority and the wizard traps.
 
 ## Execution discipline (non-negotiable)
 

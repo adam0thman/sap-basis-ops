@@ -372,6 +372,7 @@ If the copy's work process for that table is still holding it:
 - **`sap-db-command-reference`** — `hdbsql`, `sqlplus`, and the correct OS user per database.
 - **`sap-space-reclaim`** — a large delete leaves space that needs reclaiming, and log/undo growth during the load.
 - **`sap-compliance-docs`** — the Service Description Guide that actually governs your HANA entitlement; §0a explains why the licence answer lives there and not in an SAP Note.
+- **`sap-support-case`** — same consent-gate pattern (§0a here, troubleshooting key there), and where to go if the copy framework really is defective.
 
 ---
 

@@ -288,6 +288,7 @@ sapcontrol -nr <nr> -function AccessCheck <FunctionName>     # is this method pe
 - **`sap-kernel-patch`** — during a Rolling Kernel Switch, `dpmon` must be started from the **local instance** directory, not the central `exe`.
 - **`sap-nw-java-pi`** — the AS Java counterpart of §0: `J2EEGetProcessList2` (GetProcessList GREEN is not "Java is up"), jcmon, and the telnet shell on `5<nr>08`.
 - **`sap-client-copy-accelerator`** — the same diagnose-the-DB-before-blaming-it discipline, applied to a stalled client copy.
+- **`sap-support-case`** — gather the evidence here first; a case that shows what was ruled out is triaged far faster.
 
 ## Execution discipline (non-negotiable)
 
