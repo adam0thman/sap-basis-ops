@@ -279,11 +279,15 @@ SAP Notes supersede this file, and for troubleshooting they are often *the answe
 **`fetch_attachment`** retrieves the bytes. Pass the URL verbatim. If your MCP build predates that tool,
 open the URL in a signed-in browser and say the file was fetched manually.
 
-> ⚠️ **Two ways a hand-rolled fetch goes wrong — both verified.** An unauthenticated request returns
-> **HTTP 200 with a small HTML login stub**, not an error — check content type and magic bytes. And SAP
-> serves many attachments from a *generic endpoint* (`…/services/attachment.htm?iv_key=…`), so the URL
-> basename is `attachment.htm` even for a PDF — take the name from **`attachments[].filename`** or the
-> **`Content-Disposition`** header, never from the URL path.
+> ⚠️ **Prefer the `fetch_attachment` tool over a hand-rolled download** — it is hardened upstream
+> (merged Oct 2026) against all of this. An unauthenticated request returns **HTTP 200 with a small HTML
+> login stub**, not an error — check content type and magic bytes; the tool now raises a distinct
+> **`SESSION_EXPIRED`** instead, so re-authenticate and retry rather than saving the stub. SAP serves many
+> attachments from a *generic endpoint* (`…/services/attachment.htm?iv_key=…`), so the URL basename is
+> `attachment.htm` even for a PDF — take the name from **`attachments[].filename`** or the
+> **`Content-Disposition`** header, never from the URL path. Downloads are now bounded by size, redirect
+> count and timeout; an output directory must be a **directory that exists**, and non-HTTPS URLs,
+> explicit ports and embedded `user:pass` credentials are rejected.
 
 No MCP available? Look it up on `me.sap.com/notes` and say the check was skipped.
 

@@ -486,14 +486,22 @@ behave as documented:
 constructed. If your MCP build predates that tool, open the URL in a signed-in browser instead and say the
 file was fetched manually.
 
-> ⚠️ **Two ways a hand-rolled fetch goes wrong — both verified.**
+> ⚠️ **Prefer the `fetch_attachment` tool over a hand-rolled download.** It is now hardened upstream
+> (merged Oct 2026) against the failure modes below, and a hand-rolled fetch reintroduces every one.
 > **1. Trusting the status code.** An unauthenticated request returns **HTTP 200 with a small HTML login
 > stub**, not an error. Check the content type and magic bytes, or you save a JavaScript redirect page
-> under a `.pdf` name.
+> under a `.pdf` name. The tool now surfaces this as a distinct **`SESSION_EXPIRED`** error — a redirect
+> to SAP sign-in, or a 401/403, fails loudly instead of handing you a stub. Re-authenticate and retry.
 > **2. Naming the file from the URL.** SAP serves many attachments from a *generic endpoint* —
 > `…/services/attachment.htm?iv_key=…&iv_guid=…` — so the URL basename is `attachment.htm` even when the
 > payload is a 24-page PDF. Take the name from **`attachments[].filename`** or the response's
 > **`Content-Disposition`** header, never from the URL path.
+> **3. Downloads are bounded now.** A size cap, a redirect cap and a request timeout mean a huge or
+> looping attachment fails cleanly rather than hanging. If you script your own, bound all three —
+> check `Content-Length` *before* streaming, not after.
+> **4. If you pass an output directory, it must be a directory that exists.** Handing it a *file* path
+> is rejected; so are non-HTTPS URLs, explicit ports, and URLs carrying embedded `user:pass`
+> credentials. These were real defects found in review, not hypotheticals.
 
 No MCP available? Look the Note up on `me.sap.com/notes/<id>` and say the check was skipped rather than
 assuming this file is current.
