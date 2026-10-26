@@ -179,6 +179,10 @@ GET /services/odata/svt/swdcuisrv/ObjectSet('<Fastkey>')?$format=json
 `ENR` is the software-component-release number, taken from the search row's `SubtreeEvent`. Note
 `DownloadItemSet` — **not** `ObjectListItemSet`, which returns 0 rows for these events. **[V]**
 
+**`sapdl.py tree <ENR>` does steps 1–2 for both variants in one call** and prints them side by side with
+their Fastkeys, so you cannot descend one branch and forget the other. Given the 0.003 % size difference,
+this is the step least suited to being driven by hand — see §5.
+
 **Worked example — ST-A/PI 01X_731** (`ENR=73555000100200023403`), both fetched and SHA-256 verified: **[V]**
 
 | Delivery type | `SWTYPSC` | Title | Fastkey | Bytes |
@@ -290,12 +294,30 @@ checksum verify from below, so the whole loop is one tool: **[F]**
 ```bash
 sapdl.py search "SUM 2.0"                  # catalogue search → JSON lines
 sapdl.py info   <ObjectKey>                # FileName, size, SHA-256, status
-sapdl.py get    <ObjectKey> <outfile>      # download, magic-byte check, SHA-256 verify
+sapdl.py tree   <ENR>                      # add-on: BOTH delivery variants (§2a)
+sapdl.py get    <ObjectKey> <outfile>      # resumable download, SHA-256 verified
 ```
 
 It reads `~/.sapdl.cfg` (the 0600 file above) and keeps its cookie jar in `~/.cache/sapdl/`, overridable
-with `SAPDL_CFG` / `SAPDL_JAR`. **The passphrase is never an argument**, so it stays out of `ps`, shell
-history and logs.
+with `SAPDL_CFG` / `SAPDL_JAR` / `SAPDL_RETRIES`. **The passphrase is never an argument**, so it stays out
+of `ps`, shell history and logs. The jar is re-`chmod`ed to 0600 after every call — `curl -c` creates it
+**0644**, and it holds a live session cookie for your S-user.
+
+**Three behaviours that matter on a real change window:**
+
+- **Resume.** `get` retries with `curl -C -`, but **only when the `.part` file provably starts with archive
+  magic**. A `.part` containing an HTML login page is discarded rather than appended to — appending would
+  corrupt the archive silently and the checksum would then blame the wrong thing. If the server refuses the
+  range (`rc=33`) it restarts from zero and says so.
+- **Re-auth.** A lapsed IdP session returns **HTTP 200 with an HTML login page**. The script detects that,
+  drops the cookie jar and re-authenticates **once**. Without this, a six-file SP queue dies on file five
+  with a message that reads like a parsing bug.
+- **The payload never shares a path with the SAML pages.** Only the terminal hop — the POST carrying
+  `SAMLResponse` — writes to the output file; every other hop is buffered in memory under a 2 MB cap. So a
+  failed chain cannot leave an HTML page sitting where an archive should be.
+
+Run [`test_sapdl.py`](references/test_sapdl.py) to check all of the above — it stubs `curl`, so it needs
+neither a certificate nor network.
 
 > ⚠️ **An expired or wrong certificate returns HTTP 200 with an HTML login page**, not an error. That is
 > why `get` checks the magic bytes (`CAR 2` / `PK`) *before* hashing — otherwise you cheerfully checksum a

@@ -10,33 +10,58 @@ Setup (once):
     printf 'cert-type = "P12"\ncert = "%s:%s"\n' "$PFX_PATH" "$PFX_PASS" > ~/.sapdl.cfg
 
 Usage:
-    sapdl.py search "SUM 2.0"           # JSON lines of matching objects
+    sapdl.py search "SUM 2.0"           # catalogue search -> JSON lines
     sapdl.py info   <ObjectKey>         # FileName, size, SHA-256, status
-    sapdl.py get    <ObjectKey> <out>   # download + verify against ObjectSet.Checksum
+    sapdl.py tree   <ENR>               # add-on: BOTH delivery variants + Fastkeys
+    sapdl.py get    <ObjectKey> <out>   # download, resumable, SHA-256 verified
 
-Override the cookie jar with SAPDL_JAR. See SKILL.md section 5.
+Override with SAPDL_CFG / SAPDL_JAR / SAPDL_RETRIES. See SKILL.md section 5.
 """
 import sys, os, re, json, subprocess, html, hashlib, urllib.parse
 
-CFG = os.path.expanduser(os.environ.get("SAPDL_CFG", "~/.sapdl.cfg"))
-JAR = os.path.expanduser(os.environ.get("SAPDL_JAR", "~/.cache/sapdl/cookies.txt"))
-SVC = "https://launchpad.support.sap.com/services/odata/svt/swdcuisrv"
+CFG     = os.path.expanduser(os.environ.get("SAPDL_CFG", "~/.sapdl.cfg"))
+JAR     = os.path.expanduser(os.environ.get("SAPDL_JAR", "~/.cache/sapdl/cookies.txt"))
+RETRIES = int(os.environ.get("SAPDL_RETRIES", "3"))
+SVC     = "https://launchpad.support.sap.com/services/odata/svt/swdcuisrv"
+
+# An auto-POST form page is a few KB. Anything larger on a hop we expect to buffer
+# in memory means the chain went somewhere unexpected -- bail rather than pull a
+# multi-GB payload into RAM. (curl enforces this from Content-Length, so it is a
+# guard against the documented shape changing, not a hard ceiling.)
+FORM_PAGE_MAX = 2 << 20
+
+ARCHIVE_MAGIC = (b"CAR 2", b"PK")
 
 
-def curl(url, data=None, out=None):
+class Transient(Exception):
+    """A curl-level failure worth retrying (network drop, truncated transfer)."""
+
+
+def curl(url, data=None, out=None, resume=False, maxsize=None):
     cmd = ["curl", "-K", CFG, "-sS", "-L", "-c", JAR, "-b", JAR,
            "-w", "\n%{http_code}|%{content_type}|%{url_effective}"]
-    if data is not None:
-        for k, v in data:
-            cmd += ["--data-urlencode", "%s=%s" % (k, v)]
+    if maxsize:
+        cmd += ["--max-filesize", str(maxsize)]
+    if resume:
+        cmd += ["-C", "-"]
+    for k, v in (data or []):
+        cmd += ["--data-urlencode", "%s=%s" % (k, v)]
     if out:
         cmd += ["-o", out]
     cmd.append(url)
+
     r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        universal_newlines=out is None)
+    # curl creates the jar 0644; it holds a live session cookie for the S-user.
+    try:
+        os.chmod(JAR, 0o600)
+    except OSError:
+        pass
+
     if r.returncode:
         err = r.stderr if isinstance(r.stderr, str) else r.stderr.decode(errors="replace")
-        sys.exit("curl failed rc=%d: %s" % (r.returncode, err[:300]))
+        raise Transient("curl rc=%d: %s" % (r.returncode, err.strip()[:300]))
+
     txt = r.stdout if isinstance(r.stdout, str) else r.stdout.decode(errors="replace")
     body, meta = txt.rsplit("\n", 1)
     code, ctype, eff = meta.split("|", 2)
@@ -52,40 +77,61 @@ def attr(tag, name):
     return html.unescape(m.group(1)) if m else None
 
 
-def follow(url, out=None, max_hops=8):
-    """curl -L follows redirects but does NOT submit HTML forms.
+def follow(url, out=None, resume=False, max_hops=8):
+    """Walk the SAML auto-POST chain. curl -L follows redirects but does NOT
+    submit HTML forms, so each form's action + inputs are re-POSTed by hand.
 
-    The SAML chain is carried by auto-POST forms, so each one has to be parsed
-    and re-posted by hand. Three hops in the normal case; max_hops is the guard
-    against a redirect loop.
+    The documented chain is three hops:
+      1. GET  /file/<key>                  -> form carrying SAMLRequest
+      2. POST accounts.sap.com/.../sso     -> form carrying SAMLResponse
+      3. POST the tokengen action          -> the file itself
+
+    Only hop 3 can be large, and it is identified by carrying SAMLResponse. Every
+    other hop is buffered in memory, so `out` receives the payload and nothing
+    else -- no HTML ever transits the output file.
     """
-    body, code, ctype, eff = curl(url, out=out)
+    body, code, ctype, eff = curl(url, maxsize=None if out is None else FORM_PAGE_MAX)
     for _ in range(max_hops):
-        if out and "html" not in ctype:
-            return body, code, ctype
         if "html" not in ctype and not body.lstrip().startswith("<"):
-            return body, code, ctype
-        page = open(out, errors="replace").read() if out else body
-        m = FORM.search(page)
+            return body, code, ctype       # JSON/plain: the OData path ends here
+
+        m = FORM.search(body)
         if not m:
-            # JS hash-bootstrap page: retry the original URL now that cookies are set
-            if "window.location.hash" in page:
-                body, code, ctype, eff = curl(url, out=out)
+            # JS hash-bootstrap page: replay the original URL now that cookies are set
+            if "window.location.hash" in body:
+                body, code, ctype, eff = curl(url, maxsize=FORM_PAGE_MAX if out else None)
                 continue
-            return page, code, ctype
+            return body, code, ctype
+
         action = urllib.parse.urljoin(eff, html.unescape(m.group(1)))
         fields = [(attr(t, "name"), attr(t, "value") or "")
                   for t in INPUT.findall(m.group(2)) if attr(t, "name")]
-        body, code, ctype, eff = curl(action, data=fields, out=out)
-    sys.exit("gave up after %d form hops - check the certificate is valid and not expired" % max_hops)
+
+        if out and any(k == "SAMLResponse" for k, _ in fields):
+            curl(action, data=fields, out=out, resume=resume)   # terminal hop -> file
+            return None, "200", "application/octet-stream"
+
+        body, code, ctype, eff = curl(action, data=fields,
+                                      maxsize=FORM_PAGE_MAX if out else None)
+
+    raise Transient("gave up after %d form hops" % max_hops)
 
 
-def odata(path):
+def odata(path, _retried=False):
     sep = "&" if "?" in path else "?"
     body, code, ctype = follow("%s/%s%s$format=json" % (SVC, path, sep))
     try:
         return json.loads(body)["d"]
     except Exception:
+        # A lapsed IdP session returns an HTML login page with HTTP 200. Drop the
+        # jar and re-auth once -- an SP queue must not die on file 5 of 6.
+        if not _retried and ("html" in ctype or body.lstrip().startswith("<")):
+            sys.stderr.write("session looks lapsed, re-authenticating\n")
+            try:
+                os.unlink(JAR)
+            except OSError:
+                pass
+            return odata(path, _retried=True)
         sys.exit("not JSON (HTTP %s, %s): %s" % (code, ctype, body[:200]))
 
 
@@ -107,6 +153,28 @@ def info(key):
     return d
 
 
+# SWTYPSC is the delivery type. Both variants are near-identical in size and both
+# are valid CAR archives -- only the node you descended through says which is
+# which, so this lists both rather than making you pick blind. See SKILL.md 2a.
+DELIVERY = [("N", "INSTALLATION  (SAINT install package)"),
+            ("X", "EXCHANGE-UPGRADE (update an existing add-on)")]
+
+
+def tree(enr, v="INST"):
+    for swtypsc, label in DELIVERY:
+        print("== %s  SWTYPSC=%s" % (label, swtypsc))
+        d = odata("DownloadItemSet?_EVENT=LIST&EVENT=LIST&ENR=%s&SWTYPSC=%s"
+                  "&PECCLSC=NONE&V=%s&TA=ACTUAL"
+                  % (urllib.parse.quote(enr), swtypsc, v))
+        rows = d.get("results", [])
+        if not rows:
+            print("   (no files -- check ENR, or V=MAINT for maintenance deliveries)")
+        for r in rows:
+            print("   %-22s %-20s %14s  %s" % (
+                r.get("Title") or "", r.get("Fastkey") or "",
+                r.get("Size") or r.get("FileSize") or "", r.get("Description") or ""))
+
+
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -115,31 +183,61 @@ def sha256(path):
     return h.hexdigest().upper()
 
 
+def head_bytes(path, n=8):
+    try:
+        with open(path, "rb") as f:
+            return f.read(n)
+    except OSError:
+        return b""
+
+
 def get(key, outfile):
     d = odata("ObjectSet('%s')" % key)
-    tmp = outfile + ".part"
-    follow("https://softwaredownloads.sap.com/file/%s" % key, out=tmp)
+    want = (d.get("Checksum") or "").upper()
+    part = outfile + ".part"
+    url = "https://softwaredownloads.sap.com/file/%s" % key
 
-    # An expired cert or a stale session yields an HTML error page with HTTP 200.
-    # The magic bytes are what actually distinguishes a file from a login page.
-    with open(tmp, "rb") as f:
-        head = f.read(8)
-    if not head.startswith(b"CAR 2") and not head.startswith(b"PK"):
-        sys.exit("download is not an archive (starts %r); left in %s" % (head, tmp))
+    for attempt in range(1, RETRIES + 1):
+        # Resume only from bytes that are provably a partial archive. A .part left
+        # by an older build could be an HTML page; appending to that silently
+        # corrupts the result.
+        resume = (os.path.exists(part) and os.path.getsize(part) > 0
+                  and head_bytes(part).startswith(ARCHIVE_MAGIC))
+        if os.path.exists(part) and not resume:
+            os.unlink(part)
+        try:
+            follow(url, out=part, resume=resume)
+            break
+        except Transient as e:
+            if "rc=33" in str(e) and os.path.exists(part):
+                os.unlink(part)                      # server refused the range
+                sys.stderr.write("resume unsupported, restarting from zero\n")
+            if attempt == RETRIES:
+                sys.exit("download failed after %d attempts: %s\n"
+                         "partial file kept at %s" % (RETRIES, e, part))
+            sys.stderr.write("attempt %d/%d failed (%s), retrying\n" % (attempt, RETRIES, e))
 
-    got, want = sha256(tmp), (d.get("Checksum") or "").upper()
+    # An expired cert or a lapsed session yields HTTP 200 with an HTML login page.
+    # Magic bytes are what actually tell a file from a login page.
+    head = head_bytes(part)
+    if not head.startswith(ARCHIVE_MAGIC):
+        sys.exit("not an archive (starts %r) -- certificate valid? left in %s" % (head, part))
+
+    got = sha256(part)
     print("sha256", got, "expected", want or "(none published)",
           "MATCH" if got == want else "MISMATCH" if want else "UNVERIFIED")
     if want and got != want:
         sys.exit(1)
-    os.replace(tmp, outfile)
+    os.replace(part, outfile)
     print("saved", outfile, os.path.getsize(outfile), "bytes")
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.dirname(JAR), mode=0o700, exist_ok=True)
+    d = os.path.dirname(JAR)
+    if d:
+        os.makedirs(d, mode=0o700, exist_ok=True)
     args = sys.argv[1:]
-    cmds = {"search": (search, 1), "info": (info, 1), "get": (get, 2)}
+    cmds = {"search": (search, 1), "info": (info, 1), "tree": (tree, 1), "get": (get, 2)}
     if not args or args[0] not in cmds or len(args) - 1 != cmds[args[0]][1]:
         sys.exit(__doc__)
     cmds[args[0]][0](*args[1:])
