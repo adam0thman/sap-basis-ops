@@ -23,3 +23,5 @@ node_modules/
 *.log
 dev_*
 dev_jco_rfc.log
+__pycache__/
+*.pyc

@@ -283,6 +283,24 @@ curl -K ~/.sapdl.cfg -sSL -c jar.txt -b jar.txt \
 each form's `action` + `input` fields and re-POST them (2 hops). Any HTTP client works; the auth is the
 only hard part.
 
+**A working implementation ships with this skill: [`references/sapdl.py`](references/sapdl.py)** — ~140
+lines, standard library only, drives `curl`. It does the form-chain walk, the OData search from §2 and the
+checksum verify from below, so the whole loop is one tool: **[F]**
+
+```bash
+sapdl.py search "SUM 2.0"                  # catalogue search → JSON lines
+sapdl.py info   <ObjectKey>                # FileName, size, SHA-256, status
+sapdl.py get    <ObjectKey> <outfile>      # download, magic-byte check, SHA-256 verify
+```
+
+It reads `~/.sapdl.cfg` (the 0600 file above) and keeps its cookie jar in `~/.cache/sapdl/`, overridable
+with `SAPDL_CFG` / `SAPDL_JAR`. **The passphrase is never an argument**, so it stays out of `ps`, shell
+history and logs.
+
+> ⚠️ **An expired or wrong certificate returns HTTP 200 with an HTML login page**, not an error. That is
+> why `get` checks the magic bytes (`CAR 2` / `PK`) *before* hashing — otherwise you cheerfully checksum a
+> login page and report a mismatch you will misdiagnose. **[F]**
+
 > The **OData service in §2 accepts the same certificate**, so search → qualify → download → verify runs
 > with no browser anywhere in the loop. **[V]**
 
