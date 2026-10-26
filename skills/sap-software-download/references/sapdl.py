@@ -37,6 +37,11 @@ class Transient(Exception):
     """A curl-level failure worth retrying (network drop, truncated transfer)."""
 
 
+def warn(msg):
+    # stdout carries JSON lines; diagnostics must not land in a caller's parser.
+    sys.stderr.write("sapdl: %s\n" % msg)
+
+
 def curl(url, data=None, out=None, resume=False, maxsize=None):
     cmd = ["curl", "-K", CFG, "-sS", "-L", "-c", JAR, "-b", JAR,
            "-w", "\n%{http_code}|%{content_type}|%{url_effective}"]
@@ -126,7 +131,7 @@ def odata(path, _retried=False):
         # A lapsed IdP session returns an HTML login page with HTTP 200. Drop the
         # jar and re-auth once -- an SP queue must not die on file 5 of 6.
         if not _retried and ("html" in ctype or body.lstrip().startswith("<")):
-            sys.stderr.write("session looks lapsed, re-authenticating\n")
+            warn("session looks lapsed, re-authenticating")
             try:
                 os.unlink(JAR)
             except OSError:
@@ -135,13 +140,53 @@ def odata(path, _retried=False):
         sys.exit("not JSON (HTTP %s, %s): %s" % (code, ctype, body[:200]))
 
 
-def search(q):
-    d = odata("SearchResultSet?SEARCH_STRING=" + urllib.parse.quote(q) +
-              "&SEARCH_MAX_RESULT=500&RESULT_PER_PAGE=500")
-    for r in d.get("results", []):
-        print(json.dumps({k: r.get(k) for k in
-                          ("Title", "Description", "Infotype", "Fastkey",
-                           "ReleaseDate", "Platform", "Size")}))
+SEARCH_FIELDS = ("Title", "Description", "Infotype", "Fastkey",
+                 "ReleaseDate", "Platform", "Size")
+
+
+def row_key(r):
+    # Navigation nodes carry an empty Fastkey -- for those the event string is
+    # what makes the row unique. See SKILL.md 2a.
+    return r.get("Fastkey") or (r.get("Title"), r.get("SubtreeEvent"))
+
+
+def search(q, page=None, max_pages=50):
+    """Page through the result set, verifying at runtime that paging works.
+
+    This service is event-driven and does not document a paging cursor; $filter
+    is known to be ignored on sibling entity sets. So rather than trust $skip,
+    each page is checked against what has already been seen: if the rows repeat,
+    the service ignored $skip and the result set is simply capped -- say so on
+    stderr instead of presenting a truncated list as complete.
+    """
+    page = page or int(os.environ.get("SAPDL_PAGE", "500"))
+    seen, skip, shown = set(), 0, 0
+
+    for _ in range(max_pages):
+        d = odata("SearchResultSet?SEARCH_STRING=%s&SEARCH_MAX_RESULT=%d"
+                  "&RESULT_PER_PAGE=%d&$skip=%d"
+                  % (urllib.parse.quote(q), page, page, skip))
+        rows = d.get("results", [])
+        if not rows:
+            return shown
+
+        fresh = [r for r in rows if row_key(r) not in seen]
+        for r in fresh:
+            seen.add(row_key(r))
+            print(json.dumps({k: r.get(k) for k in SEARCH_FIELDS}))
+        shown += len(fresh)
+
+        if not fresh or len(fresh) < len(rows):
+            if skip:
+                warn("service ignored $skip -- showing the first %d rows only; "
+                     "narrow the search string" % shown)
+            return shown
+        if len(rows) < page:
+            return shown                      # last page, short
+        skip += len(rows)
+
+    warn("stopped after %d pages (%d rows); narrow the search string" % (max_pages, shown))
+    return shown
 
 
 def info(key):

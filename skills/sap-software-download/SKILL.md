@@ -315,6 +315,11 @@ of `ps`, shell history and logs. The jar is re-`chmod`ed to 0600 after every cal
 - **The payload never shares a path with the SAML pages.** Only the terminal hop — the POST carrying
   `SAMLResponse` — writes to the output file; every other hop is buffered in memory under a 2 MB cap. So a
   failed chain cannot leave an HTML page sitting where an archive should be.
+- **Search paging is self-verifying.** This service documents no paging cursor, and `$filter` is ignored on
+  sibling entity sets — so `search` pages with `$skip` but **checks each page against what it has already
+  seen**. If the rows repeat, the service ignored `$skip`, and you get a warning on stderr naming the row
+  count instead of a truncated list presented as complete. Page size is `SAPDL_PAGE` (default 500).
+  Diagnostics go to **stderr**, so stdout stays parseable JSON lines.
 
 Run [`test_sapdl.py`](references/test_sapdl.py) to check all of the above — it stubs `curl`, so it needs
 neither a certificate nor network.

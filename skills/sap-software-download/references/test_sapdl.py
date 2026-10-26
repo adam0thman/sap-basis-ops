@@ -4,7 +4,7 @@
 Stubs curl, so it exercises the form-chain walk, terminal-hop detection, resume
 gating and archive sniffing without touching SAP or needing a certificate.
 """
-import os, sys, json, tempfile
+import os, sys, json, tempfile, io, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sapdl
 
@@ -89,6 +89,49 @@ def main():
     # and it must not loop forever when re-auth also fails
     sapdl.curl = lambda *a, **k: ("<html>nope</html>", "200", "text/html", "u")
     assert "not JSON" in expect_exit(sapdl.odata, "ObjectSet('K1')")
+
+    # --- 3b. search paging: honoured, ignored, and short last page ------------
+    def pager(total, honour_skip):
+        """Stub a SearchResultSet that either honours $skip or silently ignores it."""
+        def stub(url, data=None, out=None, resume=False, maxsize=None):
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+            page = int(q["RESULT_PER_PAGE"][0])
+            skip = int(q["$skip"][0]) if honour_skip else 0
+            rows = [{"Fastkey": "K%d" % i, "Title": "t%d" % i}
+                    for i in range(skip, min(skip + page, total))]
+            return json.dumps({"d": {"results": rows}}), "200", "application/json", url
+        return stub
+
+    def run_search(stub, **kw):
+        sapdl.curl = stub
+        out, err = io.StringIO(), io.StringIO()
+        real_out, real_err = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = out, err
+        try:
+            n = sapdl.search("q", **kw)
+        finally:
+            sys.stdout, sys.stderr = real_out, real_err
+        return n, out.getvalue().strip().splitlines(), err.getvalue()
+
+    # paging honoured: 250 rows in pages of 100 -> all 250, no warning
+    n, lines, err = run_search(pager(250, True), page=100)
+    assert n == 250 and len(lines) == 250, (n, len(lines))
+    assert err == "", "no warning expected when paging works: %r" % err
+    keys = [json.loads(l)["Fastkey"] for l in lines]
+    assert len(set(keys)) == 250, "rows must not repeat across pages"
+
+    # $skip ignored: page 2 repeats page 1 -> stop, warn, do not loop
+    n, lines, err = run_search(pager(250, False), page=100)
+    assert n == 100 and len(lines) == 100, (n, len(lines))
+    assert "ignored $skip" in err, err
+
+    # exact multiple of the page size must still terminate
+    n, lines, err = run_search(pager(200, True), page=100)
+    assert n == 200 and err == "", (n, err)
+
+    # runaway guard
+    n, lines, err = run_search(pager(10 ** 6, True), page=100, max_pages=3)
+    assert n == 300 and "stopped after 3 pages" in err, (n, err)
 
     # --- 4. resume only from provable archive bytes ---------------------------
     part = os.path.join(tmp, "b.sar.part")
