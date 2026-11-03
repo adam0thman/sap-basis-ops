@@ -170,6 +170,9 @@ rather than reusing an old copy, because it carries the current product definiti
 
 ## Cross-references
 
+- **Driving `sapinst` from a response file:** [sap-swpm-unattended](../sap-swpm-unattended/SKILL.md) — the worked method, and where the
+  headless route stops.
+
 - **`sap-transport-mgmt`** — `tp` and `R3trans`, the other major OS-level SAP executables.
 - **`sap-security-patch`** — review external command definitions as part of security work.
 - **`sap-software-download`** — obtaining current SWPM/SAPCAR.

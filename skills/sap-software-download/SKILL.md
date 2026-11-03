@@ -387,6 +387,9 @@ ppc64), which [sap-kernel-patch](../sap-kernel-patch/SKILL.md) covers.
 
 ## Cross-references
 
+- **Staging media for an install:** [sap-swpm-unattended](../sap-swpm-unattended/SKILL.md) — note that `NW_Unpack` wants **five**
+  kernel archives (igshelper and SAP JVM are easily missed when building the BOM).
+
 - **`sap-kernel-patch`** — what to do with the kernel archives once downloaded; SP Stack Kernel vs hotfix.
 - **`sap-security-patch`** — the monthly Notes workflow that drives most download decisions.
 - **`sap-compliance-docs`** — entitlement and the Service Description Guide behind what you may download.
