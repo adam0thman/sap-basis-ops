@@ -17,34 +17,44 @@ description: >-
 **[F]** = proven on the NetWeaver 7.52 AS ABAP / HANA install this skill comes from; **[V]** = read
 from SWPM's own output or SAP documentation; **[A]** = reasoned analogue, not executed here.
 
-> ## Read this before you plan an unattended install
+> ## The media parameter almost nobody finds
 >
-> **A response file cannot complete a fresh installation on its own.** It answers the dialog phase —
-> SID, passwords, instance numbers, database connection, kernel archives — and then stops at the
-> **installation export media**, which SWPM resolves through its own media server and exposes **no
-> inifile parameter for**. **[F]**
+> A response file **can** complete a fresh installation unattended. But SWPM does **not** carry over
+> the media locations you pick in the Media Browser dialog, and there is no `NW_Unpack` key for the
+> installation export. You must add a line per medium by hand: **[V, 2230669]**
 >
-> That is not a gap in your parameter set. It was reached with a 1265-key file harvested from SWPM's
-> own `control.xml`, after fifteen headless runs, and every workaround SAP's own error message
-> suggests was tried (§3).
+> ```
+> SAPINST.CD.PACKAGE.<media_name> = /full/path/to/medium
+> ```
 >
-> So plan for **headless to step ~148, then the SL-UI for the rest**. The response file is still
-> worth building: it answers everything except the media question, makes the run repeatable, and
-> leaves a reviewable record of what you actually asked for.
+> Miss it and the run dies at `loadInstallationExportCDs` with *"Empty package path … (Requested
+> package : EXPORT1)"*, whose own suggested fix is to re-run **without** `SAPINST_SKIP_DIALOGS` —
+> which reads as "this cannot be automated". It can. **The error names the media you are missing:**
+> `Requested package : EXPORT1` → add `SAPINST.CD.PACKAGE.EXPORT1`.
 >
-> **Exception:** a *system copy* or an *additional application server* has no installation export to
-> resolve, so those can genuinely run end to end unattended. **[A]**
-
----
+> ⚠️ **Only whole media, never single files.** *"Currently you can only specify complete DVDs, not
+> paths to single files like \*.SAR archives."* **[V, 2230669]** Point it at the directory that holds
+> `DATA_UNITS`/`LABEL.ASC`, not at an archive. Kernel SAR files go through
+> `archives.downloadBasket` instead (§1b).
+>
+> **[F]** On the install this skill comes from, this parameter was not found. Nine workarounds were
+> tried instead — bind mounts, `SAPINST_CWD`, editing `start_dir.cd` — and the run was finished by
+> hand in the SL-UI (§4). §3 lists them so nobody repeats that.
 
 ## 0. Decide the route before you build anything
 
+SAP names two unattended modes, and the difference matters for automation: **[V, 2230669]**
+
+| Mode | Flags | Use |
+|---|---|---|
+| **Observer** | `SAPINST_SKIP_DIALOGS=true` | Runs unattended **and** starts the SL-UI so you can watch progress and read logs in a browser. Parameters still come only from the file and cannot be changed there. |
+| **Non-observer** | the above **+ `SAPINST_START_GUISERVER=false`** | Scripted or overnight runs. No web dispatcher, no UI. *"It is crucial that the process is started without a Web Dispatcher … otherwise the automation could be stuck if Software Provisioning Manager encounters a situation that requires user interaction."* |
+
 | Your task | Route |
 |---|---|
-| Fresh system install (`NW_ABAP_OneHost`, `…_Standard`) | Response file **+ SL-UI to finish** — §1, §2, §3, §4 |
-| Additional application server | Response file, likely end to end **[A]** |
-| System copy / restore | Response file, likely end to end **[A]** |
-| You cannot get an OS password for the host | **Stop.** The SL-UI authenticates against an OS user; without one a fresh install cannot finish. Resolve that first — §4 |
+| Fresh system install, system copy, additional app server | Response file, **end to end** — §1, §2 |
+| You want to watch it | Same, in **observer** mode |
+| A parameter exists only in the UI | SAP's instruction is to **raise a ticket under `BC-INS`** so it gets exposed. **[V, 2230669]** Finish that run in the SL-UI (§4) meanwhile. |
 
 Check which UI your SWPM build defaults to:
 
@@ -59,7 +69,23 @@ SWPM 1.0 SP48 and SWPM 2.0 start the **browser-based SL-UI** by default — a we
 
 ## 1. Build `inifile.params`
 
-### 1a. Harvest the real keys — do not guess them
+### 1a. Generate the file — do not hand-write it
+
+**SAP's documented method, and the one to use: [V, 2230669]**
+
+1. Start `sapinst` normally and answer the screens.
+2. **Stop after the "Parameter Summary" screen** — `SAPINST_STOP_AFTER_DIALOG_PHASE=true` does this
+   for you. **[V, 2609804]**
+3. Take **`inifile.params`** from the installation directory, and **`instkey.pkey`** beside it.
+4. Edit values, add the `SAPINST.CD.PACKAGE.*` media lines, re-run.
+
+The generated file documents itself: every unset parameter is left in as a **commented-out line with
+its description above it**, so the file doubles as the parameter reference. **[V, 2230669]**
+
+Find the **product ID** in `sapinst_dev.log`, or in the generated file's own header —
+`product-id=NW_ABAP_ASCS:NW750.ADA.ABAP`. **[V, 2230669]**
+
+### 1a-bis. Building one from scratch
 
 The keys are the `defval-for-inifile-generation` attributes in SWPM's **`control.xml`**, which is
 unpacked into the sapinst working directory. Read them from the build you are actually running:
@@ -92,16 +118,25 @@ end of the dialog phase, and it writes an `inifile.params` of its own under
 | `NW_HDB_DB.abapSchemaName` / `.abapSchemaPassword` | e.g. `SAP<SID>` |
 | `NW_Unpack.sapExeSar` `.sapExeDbSar` `.igsExeSar` `.igsHelperSar` `.sapJvmSar` | **five** archives, not three |
 | `nwUsers.sidadmPassword`, `hostAgent.sapAdmPassword` | derived from master unless set |
+| **`SAPINST.CD.PACKAGE.<media_name>`** | **one line per medium, full path, whole media only** **[V, 2230669]** |
 
-> ### 🛑 Two keys that are in no guide, found the hard way **[F]**
+> ### 🛑 Two keys that trip up hand-written files
 >
 > **`archives.downloadBasket` — a directory, not a file.** Without it the run fails with
 > *"Parameter for download basket is empty"* even though every `NW_Unpack.*` path is set. The
-> individual archive paths are **not** sufficient; SWPM wants the directory that contains them.
+> individual archive paths are **not** sufficient; SWPM wants the directory that contains them, and
+> **only one version of each archive may be in it**. **[V, 2230669 + KBA 2608474]**
+>
+> That KBA lists three further causes of the same message: a `SAPINST.CD.PACKAGE.<media_name>` path
+> SWPM cannot validate, a parameter file missing at `SAPINST_INPUT_PARAMETERS_URL`, and the **wrong
+> DB-specific kernel** (`SAPEXEDB` built for another database). **[V, 2608474]**
 >
 > **`NW_GetSidNoProfiles.SAP_GUI_DEFAULT_LANGUAGE` must be left UNSET.** The validator checks it
 > against a language list read from the installation export. A forced value — even a correct one
-> like `EN` — fails. Omit the key.
+> like `EN` — fails. Omit the key. **[F]** — field-observed only; a Notes search turned up nothing
+> covering it, so treat it as a local observation, not documented behaviour. Note **2626837**
+> records the same *shape* of failure for `isUnicode` (*"Radio group contains an invalid
+> value"*). **[V]**
 
 > ⚠️ **`NW_Unpack` wants five kernel archives.** A BOM built from "kernel part I + part II + IGS" is
 > missing **`igshelper`** and **SAP JVM**, and the run stops at the unpack step. Stage all five before
@@ -119,10 +154,20 @@ grep -E 'ERROR|FAIL|is empty|not set' <instdir>/sapinst.log | tail -20
 **[F]** Fifteen headless runs took the parameter set from failing at step 4 to failing at step 148.
 That is the expected shape of the work; budget for it.
 
-### 1d. The response file is a plaintext secret store
+### 1d. Passwords: encrypted if generated, plaintext if hand-written
 
-`inifile.params` holds the **master password** and the **database SYSTEM password** in cleartext.
-SWPM writes it `600`, which is not the same as safe. **[F]**
+**A SWPM-generated file encrypts them.** Since SAPinst **749.0.69** `inifile.params` is coupled to a
+DES key in **`instkey.pkey`**; from **753.0.6** the encryption is AES256. The key file must sit in
+the **same directory** as the parameter file or the values cannot be decrypted — copy both, or
+neither. **[V, 2230669 + 2609804]**
+
+**You cannot encrypt a password by hand.** To change one, re-run the dialog phase
+(`SAPINST_STOP_AFTER_DIALOG_PHASE=true`), enter the new password, and take the re-generated
+encrypted value. **[V, 2609804]**
+
+> ⚠️ **A hand-written `inifile.params` is cleartext**, including the master and database passwords.
+> SWPM writes mode `600`, which is not the same as safe — and this is a second reason to generate
+> the file rather than author it. **[F]**
 
 - Generate it inside a `creds exec` child so the passwords never reach a command line or a log.
 - **Shred it the moment the install finishes** — `shred -u` — and treat its directory as sensitive
@@ -148,7 +193,7 @@ makes it consume the response file instead of asking. **[V]**
 
 ---
 
-## 3. The media wall — and every workaround that does not work
+## 3. Media — the one parameter you must add by hand
 
 ```
 Empty package path. … (Requested package : EXPORT1)
@@ -156,10 +201,25 @@ SOLUTION: If Software Provisioning Manager is running with option SAPINST_SKIP_D
 run the service again without that option and you will be asked about the missing package location.
 ```
 
-**SAP's own message is the answer: there is no parameter for this.** `NW_ABAP_Import_CD_Dialog` and
-`NW_CreateDBandLoad` expose no inifile keys at all. **[V]**
+**The message is misleading.** Its suggested fix — re-run without `SAPINST_SKIP_DIALOGS` — reads as
+"not automatable". The actual fix is one line, and the error names the medium for you: **[V, 2230669]**
 
-Everything tried, so you do not repeat it: **[F]**
+```
+SAPINST.CD.PACKAGE.EXPORT1 = /full/path/to/the/export
+```
+
+`NW_ABAP_Import_CD_Dialog` and `NW_CreateDBandLoad` genuinely expose no inifile keys — media is
+simply not resolved through them. **Diagnose a path SWPM rejects** in `sapinst_dev.log`: **[V, 2608474]**
+
+```bash
+grep -A3 'SAPINST.CD.PACKAGE' <instdir>/sapinst_dev.log
+# Scanning parameter SAPINST.CD.PACKAGE.KERNEL = /mnt/kernel753 for CDs.
+# Not a valid path or not accessible: /mnt/kernel753
+```
+
+### What was tried before the parameter was found **[F]**
+
+Recorded so nobody repeats it. Every one of these fails, and none is necessary:
 
 | Attempt | Result |
 |---|---|
@@ -173,7 +233,8 @@ Everything tried, so you do not repeat it: **[F]**
 | `SAPINST_CLEANUP=false`, edit `start_dir.cd`, resume | SWPM **regenerates** `start_dir.cd` every run |
 
 `start_dir.cd` is seeded from the **sapinst executable's own directory**, whatever your working
-directory is. The media location can only be supplied by answering the dialog. **[F]**
+directory is — which is why none of the path tricks work. **[F]** The supported mechanism is
+`SAPINST.CD.PACKAGE.*`, not the filesystem.
 
 ---
 
@@ -263,12 +324,41 @@ Other choices worth making deliberately: **[F]**
 - **HANA tenant creation and `hdblcm`:** [sap-hana-lifecycle-tools](../sap-hana-lifecycle-tools/SKILL.md).
 - **Add-ons and support packages after the platform is up:**
   [sap-transport-mgmt](../sap-transport-mgmt/SKILL.md) for SPAM/SAINT queue mechanics.
-- **Parameter-key reference and the failure catalogue:**
+- **Parameter-key reference, the media keys and the dead ends:**
   [references/inifile-parameters.md](references/inifile-parameters.md).
 
 ## Sources
 
-- SWPM's own `control.xml` (`defval-for-inifile-generation` attributes) and `sapinst.log`, read from
-  the running build — the only authoritative key list. **[V]**
-- `sapinst -h` and the SL-UI startup banner, quoted above. **[V]**
-- Error text of `loadInstallationExportCDs`, quoted above. **[V]**
+**SAP Notes / KBAs** — read in full via the SAP for Me Notes service:
+
+- **2230669** — *System Provisioning Using an Input Parameter File* (v38, 2026-03-30,
+  `BC-INS-SWPM`). **The central note.** Observer vs non-observer mode, `SAPINST.CD.PACKAGE.*`, the
+  whole-media restriction, `archives.downloadBasket`, `instkey.pkey`, product-ID lookup, and the
+  "raise a BC-INS ticket" escape hatch for UI-only parameters. **[V]**
+- **2609804** — *SWPM Unattended Installation: password handling* (`BC-INS-SWPM`). Passwords cannot
+  be encrypted by hand; `SAPINST_STOP_AFTER_DIALOG_PHASE=true` to regenerate them. **[V]**
+- **2608474** — *"Parameter for download basket is empty" during Archive-Based / Unattended
+  installation* (`BC-INS-SWPM`). Four causes and the `sapinst_dev.log` diagnostic. **[V]**
+- **2393060** — *SAPinst Framework 749 Central Note* (`BC-INS-FWK`). **[G]**
+- **1680045** / **2568783** — Release Notes for SWPM 1.0 (rec. SP48) and SWPM 2.0 (rec. SP25). **[G]**
+- **2742212** — *Unattended installation fails with "Empty directory name is not allowed."* **[G]**
+- **2626837** — *'isUnicode': Radio group contains an invalid value*. **[G]**
+- **2974889** — *Unattended install fails in step getDBInfo due to missing parameters* (`HAN-LM-INS-SAP`). **[G]**
+- **2482103** — *Installation with SWPM in unattended mode using parameter input file fails*. **[G]**
+- **2506859** — *SAP system installation on Oracle with SWPM in unattended mode* (`BC-DB-ORA-SYS`). **[G]**
+- **2509959** — *Diagnostics Agent unattended installation, SWPM SP20+*. **[G]**
+
+**help.sap.com**
+
+- [System Provisioning Using an Input Parameter File](https://help.sap.com/docs/SLTOOLSET/af62b1a90092403b931973e2a264ba71/3e7738abf8674ed7a6448d8c04fa5de7.html)
+  — the SL Toolset guide page; same content as Note 2230669. **[V]**
+- [Running Software Provisioning Manager](https://help.sap.com/docs/SLTOOLSET/3741bfe0345f4892ae190ee7cfc53d4c/3bef20d729b84e31bbced506c5b287c0.html) **[G]**
+- [Additional Information about Software Provisioning Manager](https://help.sap.com/docs/SLTOOLSET/df78c1d3e27044d29dd9c77765a7e40f/c0d644d57afb44ff9d7788b80163608f.html) **[G]**
+- Per-scenario Installation and System Copy guides: **support.sap.com/sltoolset** → System Provisioning.
+  Note 2230669 is explicitly an *addition* to those guides, not a replacement. **[V]**
+
+**From the running system** — always outrank the above for your build:
+
+- SWPM's own `control.xml` (`defval-for-inifile-generation`), and the generated `inifile.params`
+  with its self-documenting comments. **[V]**
+- `sapinst_dev.log` for the product ID and the media scan. **[V]**

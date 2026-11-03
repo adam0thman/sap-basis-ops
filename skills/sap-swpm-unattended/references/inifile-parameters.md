@@ -5,6 +5,10 @@ comes from; **[V]** = read from SWPM's own output; **[A]** = reasoned, not execu
 
 ---
 
+> **Primary source: SAP Note 2230669** — *System Provisioning Using an Input Parameter File*,
+> mirrored at [help.sap.com](https://help.sap.com/docs/SLTOOLSET/af62b1a90092403b931973e2a264ba71/3e7738abf8674ed7a6448d8c04fa5de7.html).
+> It is an **addition to** the per-scenario guides at support.sap.com/sltoolset, not a replacement.
+
 ## A. Where the keys come from
 
 SWPM generates a response file from its product definition. The authoritative key list is the set of
@@ -27,9 +31,13 @@ grep -oE '[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z0-9_]+' <path>/control.xml | sort -u | 
 **[F]** 1265 keys for `NW_ABAP_OneHost:NW752.HDB.PD`. They are product- and version-specific —
 a key list from a blog post, or from a different SWPM SP, will not match.
 
-**Easier route when the product has run before:** let `sapinst` complete the dialog phase
-interactively once. It writes its own `inifile.params` under `sapinst_instdir/<product>/…`. Copy
-that and edit it — the keys are then guaranteed correct for your build. **[A]**
+**SAP's documented route, and the right default:** run the dialog phase interactively, **stop after
+the "Parameter Summary" screen** (`SAPINST_STOP_AFTER_DIALOG_PHASE=true`), and take the generated
+`inifile.params` — plus **`instkey.pkey`** — from the installation directory. Unset parameters are
+left in the file as commented-out lines with their documentation above them, so it doubles as the
+reference. **[V, 2230669 / 2609804]**
+
+Harvesting `control.xml` is the fallback for when you cannot run the dialog phase at all.
 
 ---
 
@@ -56,7 +64,8 @@ that and edit it — the keys are then guaranteed correct for your build. **[A]*
 | `NW_Unpack.igsExeSar` | IGS | |
 | `NW_Unpack.igsHelperSar` | **igshelper** | commonly missed |
 | `NW_Unpack.sapJvmSar` | **SAP JVM** | commonly missed |
-| `archives.downloadBasket` | **directory** | see §C |
+| `archives.downloadBasket` | **directory** | see §C; one version of each archive only |
+| `SAPINST.CD.PACKAGE.<media_name>` | **full path** | one line per medium; **whole media only, never a \*.SAR** **[V, 2230669]** |
 | `nwUsers.sidadmPassword` | secret | derived from master if unset |
 | `hostAgent.sapAdmPassword` | secret | derived from master if unset |
 
@@ -70,14 +79,23 @@ SELECT DATABASE_NAME, SERVICE_NAME, SQL_PORT
 
 ---
 
-## C. The two keys that are in no guide **[F]**
+## C. Two keys that trip up hand-written files
 
 ### `archives.downloadBasket` is a directory
 
 Symptom: **"Parameter for download basket is empty"**, with every `NW_Unpack.*` path correctly set.
 
-The individual archive paths are not sufficient. SWPM wants the **directory containing** the kernel
-archives, as a separate key. Set both.
+SWPM wants the **directory containing** the archives, as a separate key, and *"make sure that there
+is only one version of the same archive in the directory"*. **[V, 2230669]**
+
+KBA **2608474** gives four causes for this one message: **[V]**
+
+| Cause | Check |
+|---|---|
+| `archives.downloadBasket` unset | the key itself |
+| `SAPINST.CD.PACKAGE.<media_name>` cannot be validated | `grep -A3 SAPINST.CD.PACKAGE sapinst_dev.log` → *"Not a valid path or not accessible"* |
+| parameter file not found | the path in `SAPINST_INPUT_PARAMETERS_URL` |
+| wrong DB-specific kernel | `SAPEXEDB` must match your database |
 
 ### `SAP_GUI_DEFAULT_LANGUAGE` must be left unset
 
@@ -87,7 +105,24 @@ resolve it.
 
 ---
 
-## D. Failure catalogue — the media wall
+## D. Media — the parameter, and the dead ends
+
+**The supported mechanism is `SAPINST.CD.PACKAGE.<media_name> = <full path>`, one line per medium.**
+SWPM does **not** carry over what you chose in the Media Browser dialog, and *"currently you can
+only specify complete DVDs, not paths to single files like \*.SAR archives"*. **[V, 2230669]**
+
+```
+SAPINST.CD.PACKAGE.KERNEL     = /mnt/KERNEL
+SAPINST.CD.PACKAGE.LOAD       = /mnt/LOAD
+SAPINST.CD.PACKAGE.RDBMS      = /mnt/RDBMS
+SAPINST.CD.PACKAGE.EXPORT1    = /mnt/export        # the name the error asks for
+SAPINST.CD.PACKAGE.MIGRATION1 = /mnt/abap_export   # system copy: ABAP export
+SAPINST.CD.PACKAGE.JMIG       = /mnt/java_export   # system copy: Java export
+```
+
+Relative paths are not sufficient — use full paths. **[V, 2230669]**
+
+### The dead ends
 
 Error at `loadInstallationExportCDs` (step ~148 of the dialog phase): **[V]**
 
@@ -110,7 +145,8 @@ below was tried and failed: **[F]**
 | **bind mount** of the export under the SWPM directory | not scanned — SWPM's own `LABEL.ASC` marks that directory as a single medium |
 | `SAPINST_CLEANUP=false` + edit `start_dir.cd` + resume | regenerated on every run |
 
-**Conclusion: answer the dialog in the SL-UI.** Parent skill §4.
+These were tried **before** `SAPINST.CD.PACKAGE.*` was found, and the run was finished by hand in
+the SL-UI. None of them is necessary. **[F]**
 
 ---
 
@@ -139,8 +175,12 @@ file had proven correct:
 
 ## F. Secret handling
 
-`inifile.params` holds the master password and the database SYSTEM password **in cleartext**. SWPM
-creates it mode `600`. **[F]**
+**A SWPM-generated file encrypts passwords.** From SAPinst 749.0.69 they are coupled to a DES key in
+`instkey.pkey`; from 753.0.6 the encryption is AES256. The key file must live in the same directory
+as the parameter file. You cannot encrypt a value by hand — regenerate it through the dialog phase.
+**[V, 2230669 / 2609804]**
+
+**A hand-written file is cleartext**, master and database passwords included, at mode `600`. **[F]**
 
 - Build it inside a credential-store child process; never interpolate a password into a command
   whose output you read.
